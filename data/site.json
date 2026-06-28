@@ -1,0 +1,18 @@
+{
+  "companyName": "Sadebal Yapı",
+  "email": "sadebalinsaat@gmail.com",
+  "phoneDisplay": "0532 461 83 98",
+  "phoneHref": "+905324618398",
+  "addressShort": "Artuklu, Mardin",
+  "addressFull": "Artuklu, Mardin",
+  "founder": {
+    "name": "İsa Sadebal",
+    "title": "Şirket Kurucusu"
+  },
+  "workingHours": "Pzt–Cmt, 09:00–18:00",
+  "social": {
+    "instagram": "#",
+    "facebook": "#",
+    "linkedin": "#"
+  }
+}

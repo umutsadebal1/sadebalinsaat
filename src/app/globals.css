@@ -1,0 +1,181 @@
+@import "tailwindcss";
+
+:root {
+  /* Fonts (self-hosted via @fontsource) */
+  --font-fraunces: "Fraunces", serif;
+  --font-inter: "Inter", sans-serif;
+  --font-jbmono: "JetBrains Mono", monospace;
+
+  /* Light mode */
+  --bg: #F7F4ED;
+  --bg-elevated: #EFEAE0;
+  --bg-card: #FFFFFF;
+  --ink: #14211F;
+  --ink-soft: #4A5856;
+  --line: rgba(20, 33, 31, 0.12);
+  --line-strong: rgba(20, 33, 31, 0.22);
+
+  --petrol-900: #0A2C2D;
+  --petrol-700: #0F3D3E;
+  --petrol-600: #155453;
+  --petrol-500: #1B5E5A;
+  --gold-700: #A6802F;
+  --gold-600: #C9A24B;
+  --gold-400: #DCC07C;
+  --gold-200: #EFDFB3;
+
+  --accent: var(--gold-600);
+  --accent-ink: var(--petrol-700);
+
+  --shadow-color: 20 33 31;
+}
+
+html.dark {
+  --bg: #0A0F0E;
+  --bg-elevated: #101817;
+  --bg-card: #121C1A;
+  --ink: #EDEAE0;
+  --ink-soft: #A9B5B2;
+  --line: rgba(237, 234, 224, 0.12);
+  --line-strong: rgba(237, 234, 224, 0.22);
+
+  --petrol-900: #061A1A;
+  --petrol-700: #134B4A;
+  --petrol-600: #1B5E5A;
+  --petrol-500: #226E69;
+  --gold-700: #C9A24B;
+  --gold-600: #D9B566;
+  --gold-400: #E6C988;
+  --gold-200: #F0DDAE;
+
+  --accent: var(--gold-600);
+  --accent-ink: #0A0F0E;
+
+  --shadow-color: 0 0 0;
+}
+
+@theme inline {
+  --font-display: var(--font-fraunces);
+  --font-sans: var(--font-inter);
+  --font-mono: var(--font-jbmono);
+
+  --color-bg: var(--bg);
+  --color-bg-elevated: var(--bg-elevated);
+  --color-bg-card: var(--bg-card);
+  --color-ink: var(--ink);
+  --color-ink-soft: var(--ink-soft);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+
+  --color-petrol-900: var(--petrol-900);
+  --color-petrol-700: var(--petrol-700);
+  --color-petrol-600: var(--petrol-600);
+  --color-petrol-500: var(--petrol-500);
+  --color-gold-700: var(--gold-700);
+  --color-gold-600: var(--gold-600);
+  --color-gold-400: var(--gold-400);
+  --color-gold-200: var(--gold-200);
+  --color-accent: var(--accent);
+  --color-accent-ink: var(--accent-ink);
+}
+
+* {
+  border-color: var(--line);
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-sans);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+::selection {
+  background: var(--gold-400);
+  color: var(--petrol-900);
+}
+
+/* Visible keyboard focus */
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+[tabindex]:focus-visible {
+  outline: 2px solid var(--gold-600);
+  outline-offset: 3px;
+  border-radius: 2px;
+}
+
+.font-display {
+  font-family: var(--font-display);
+}
+.font-mono-label {
+  font-family: var(--font-mono);
+}
+
+/* Frame corner signature element */
+.frame-corner {
+  position: relative;
+}
+.frame-corner::before,
+.frame-corner::after {
+  content: "";
+  position: absolute;
+  width: 22px;
+  height: 22px;
+  border: 1.5px solid var(--gold-600);
+  opacity: 0.85;
+  transition: width 0.5s cubic-bezier(0.16, 1, 0.3, 1), height 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.frame-corner::before {
+  top: -8px;
+  left: -8px;
+  border-right: none;
+  border-bottom: none;
+}
+.frame-corner::after {
+  bottom: -8px;
+  right: -8px;
+  border-left: none;
+  border-top: none;
+}
+.frame-corner:hover::before,
+.frame-corner:hover::after {
+  width: 34px;
+  height: 34px;
+  opacity: 1;
+}
+
+.text-balance {
+  text-wrap: balance;
+}
+
+/* Custom scrollbar to match brand */
+::-webkit-scrollbar {
+  width: 10px;
+}
+::-webkit-scrollbar-track {
+  background: var(--bg);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--line-strong);
+  border-radius: 8px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--gold-600);
+}
