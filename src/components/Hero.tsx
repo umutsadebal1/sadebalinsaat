@@ -1,12 +1,19 @@
 "use client";
 
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import { useScroll, useTransform } from "framer-motion";
 import ScrollSequence from "./ScrollSequence";
 import HeroContent from "./HeroContent";
 
 export default function Hero() {
   const trackRef = useRef<HTMLDivElement>(null);
+
+  // Phones get a half-resolution frame set (960×540) so each frame decodes
+  // ~4× cheaper during scroll — the canvas is tiny on mobile anyway, so it
+  // looks the same but scrubs far more smoothly. Decided once on mount.
+  const [isMobile] = useState(
+    () => typeof window !== "undefined" && window.matchMedia("(max-width: 768px)").matches
+  );
 
   const { scrollYProgress } = useScroll({
     target: trackRef,
@@ -29,7 +36,10 @@ export default function Hero() {
             placeholderSrc="/images/hero-placeholder.jpg"
             alt="Sadebal Citylife projesine dışarıdan içeriye doğru kamera hareketi"
             frameCount={90}
-            frameSrc={(i) => `/sequence/hero/frame_${String(i).padStart(4, "0")}.webp`}
+            frameSrc={(i) => {
+              const name = `frame_${String(i).padStart(4, "0")}.webp`;
+              return isMobile ? `/sequence/hero/m/${name}` : `/sequence/hero/${name}`;
+            }}
             trackRef={trackRef}
           />
         </div>
