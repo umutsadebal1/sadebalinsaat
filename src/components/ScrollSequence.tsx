@@ -83,7 +83,8 @@ export default function ScrollSequence({
     const count = frameCount!;
 
     let lastFrame = -1;
-    let ticking = false;
+    let rafId = 0;
+    let running = false;
     const warmed = new Set<number>();
 
     // Layout cached on mount/resize, NOT read per scroll frame. The hot path
@@ -141,23 +142,19 @@ export default function ScrollSequence({
       ctx2d.drawImage(img, offsetX, offsetY, drawWidth, drawHeight);
     }
 
-    // rAF-throttled: at most one redraw per frame, and only while actually
-    // scrolling — when idle there is zero main-thread work, so it never
-    // competes with the browser's own scrolling.
-    function render() {
-      ticking = false;
+    // A continuous rAF loop drives the canvas every display frame while the
+    // hero is on screen, so the frame always matches the live scroll position
+    // (smoother than reacting to scroll events, which fire irregularly on
+    // mobile). frameForScroll reads window.scrollY — no per-frame layout — so
+    // the loop stays cheap; unchanged frames are skipped.
+    function tick() {
       const index = frameForScroll();
       if (index !== lastFrame) {
         lastFrame = index;
         drawFrame(index);
         warm(index);
       }
-    }
-    function onScroll() {
-      if (!ticking) {
-        ticking = true;
-        requestAnimationFrame(render);
-      }
+      rafId = requestAnimationFrame(tick);
     }
 
     function sizeCanvas() {
@@ -170,29 +167,27 @@ export default function ScrollSequence({
 
     sizeCanvas();
 
-    // Only listen for scroll while the hero is on screen.
-    let listening = false;
-    function startListening() {
-      if (listening) return;
-      listening = true;
+    function start() {
+      if (running) return;
+      running = true;
       measure();
-      window.addEventListener("scroll", onScroll, { passive: true });
-      render();
+      rafId = requestAnimationFrame(tick);
     }
-    function stopListening() {
-      listening = false;
-      window.removeEventListener("scroll", onScroll);
+    function stop() {
+      running = false;
+      cancelAnimationFrame(rafId);
     }
 
+    // Only run the loop while the hero is actually on screen.
     const io = new IntersectionObserver(
-      ([entry]) => (entry.isIntersecting ? startListening() : stopListening()),
+      ([entry]) => (entry.isIntersecting ? start() : stop()),
       { threshold: 0 }
     );
     io.observe(trackEl);
 
     window.addEventListener("resize", sizeCanvas);
     return () => {
-      stopListening();
+      stop();
       io.disconnect();
       window.removeEventListener("resize", sizeCanvas);
     };
