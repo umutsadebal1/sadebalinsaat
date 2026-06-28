@@ -82,10 +82,22 @@ export default function ScrollSequence({
     const trackEl = track;
     const count = frameCount!;
 
-    let rafId = 0;
-    let running = false;
     let lastFrame = -1;
+    let ticking = false;
     const warmed = new Set<number>();
+
+    // Layout cached on mount/resize, NOT read per scroll frame. The hot path
+    // uses window.scrollY (a cheap read) instead of getBoundingClientRect
+    // (which forces a synchronous layout) — that forced layout every frame is
+    // what janks slow, main-thread finger scrolling. A fast fling runs on the
+    // compositor so it never showed the cost.
+    let trackTop = 0;
+    let scrollRange = 0;
+    function measure() {
+      const rect = trackEl.getBoundingClientRect();
+      trackTop = rect.top + window.scrollY;
+      scrollRange = rect.height - window.innerHeight;
+    }
 
     // Decode a small window around the current frame off the critical path
     // so the next drawImage finds it ready instead of decoding inline.
@@ -100,10 +112,8 @@ export default function ScrollSequence({
     }
 
     function frameForScroll() {
-      const rect = trackEl.getBoundingClientRect();
-      const total = rect.height - window.innerHeight;
-      const scrolled = Math.min(Math.max(-rect.top, 0), total);
-      const progress = total > 0 ? scrolled / total : 0;
+      const scrolled = Math.min(Math.max(window.scrollY - trackTop, 0), scrollRange);
+      const progress = scrollRange > 0 ? scrolled / scrollRange : 0;
       return Math.min(count - 1, Math.max(0, Math.floor(progress * count)));
     }
 
@@ -131,49 +141,58 @@ export default function ScrollSequence({
       ctx2d.drawImage(img, offsetX, offsetY, drawWidth, drawHeight);
     }
 
-    // One redraw per animation frame, synced to the display refresh rate.
-    // Reading the scroll position here (rather than in a scroll handler)
-    // stays smooth during iOS momentum scrolling, where scroll events fire
-    // sparsely; unchanged frames are skipped so it's cheap when idle.
-    function tick() {
+    // rAF-throttled: at most one redraw per frame, and only while actually
+    // scrolling — when idle there is zero main-thread work, so it never
+    // competes with the browser's own scrolling.
+    function render() {
+      ticking = false;
       const index = frameForScroll();
       if (index !== lastFrame) {
         lastFrame = index;
         drawFrame(index);
         warm(index);
       }
-      rafId = requestAnimationFrame(tick);
     }
-
-    function start() {
-      if (running) return;
-      running = true;
-      rafId = requestAnimationFrame(tick);
-    }
-    function stop() {
-      running = false;
-      cancelAnimationFrame(rafId);
+    function onScroll() {
+      if (!ticking) {
+        ticking = true;
+        requestAnimationFrame(render);
+      }
     }
 
     function sizeCanvas() {
       canvasEl.width = canvasEl.clientWidth;
       canvasEl.height = canvasEl.clientHeight;
+      measure();
       lastFrame = -1;
       drawFrame(frameForScroll());
     }
 
     sizeCanvas();
 
-    // Only run the render loop while the hero is actually on screen.
+    // Only listen for scroll while the hero is on screen.
+    let listening = false;
+    function startListening() {
+      if (listening) return;
+      listening = true;
+      measure();
+      window.addEventListener("scroll", onScroll, { passive: true });
+      render();
+    }
+    function stopListening() {
+      listening = false;
+      window.removeEventListener("scroll", onScroll);
+    }
+
     const io = new IntersectionObserver(
-      ([entry]) => (entry.isIntersecting ? start() : stop()),
+      ([entry]) => (entry.isIntersecting ? startListening() : stopListening()),
       { threshold: 0 }
     );
     io.observe(trackEl);
 
     window.addEventListener("resize", sizeCanvas);
     return () => {
-      stop();
+      stopListening();
       io.disconnect();
       window.removeEventListener("resize", sizeCanvas);
     };
