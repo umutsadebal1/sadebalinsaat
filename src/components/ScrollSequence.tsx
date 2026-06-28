@@ -42,18 +42,30 @@ export default function ScrollSequence({
 
   useEffect(() => {
     if (!hasSequence || !frameCount || !frameSrc) return;
+    let cancelled = false;
     let loaded = 0;
+    const markLoaded = () => {
+      loaded += 1;
+      if (!cancelled && loaded === frameCount) setReady(true);
+    };
+    // Hold only the compressed images (~90KB each). Decoding a frame to a
+    // full 1080p bitmap costs ~8MB, so we never keep them all decoded —
+    // the render loop decodes just ahead of the current frame instead.
     const imgs: HTMLImageElement[] = [];
     for (let i = 1; i <= frameCount; i++) {
       const img = new window.Image();
       img.src = frameSrc(i);
-      img.onload = () => {
-        loaded += 1;
-        if (loaded === frameCount) setReady(true);
-      };
+      if (img.complete) markLoaded();
+      else {
+        img.onload = markLoaded;
+        img.onerror = markLoaded;
+      }
       imgs.push(img);
     }
     imagesRef.current = imgs;
+    return () => {
+      cancelled = true;
+    };
   }, [hasSequence, frameCount, frameSrc]);
 
   useEffect(() => {
@@ -61,63 +73,109 @@ export default function ScrollSequence({
     const canvas = canvasRef.current;
     const track = trackRef?.current ?? ownWrapperRef.current;
     if (!canvas || !track) return;
-    const ctx = canvas.getContext("2d");
+    // alpha:false skips compositing transparency; cover-fit always paints
+    // the whole canvas, so we never need clearRect between frames either.
+    const ctx = canvas.getContext("2d", { alpha: false });
     if (!ctx) return;
     const ctx2d = ctx;
     const canvasEl = canvas;
     const trackEl = track;
+    const count = frameCount!;
 
-    function draw() {
+    let rafId = 0;
+    let running = false;
+    let lastFrame = -1;
+    const warmed = new Set<number>();
+
+    // Decode a small window around the current frame off the critical path
+    // so the next drawImage finds it ready instead of decoding inline.
+    function warm(index: number) {
+      for (const j of [index + 1, index + 2, index + 3, index - 1]) {
+        const img = imagesRef.current[j];
+        if (img && !warmed.has(j)) {
+          warmed.add(j);
+          img.decode?.().catch(() => warmed.delete(j));
+        }
+      }
+    }
+
+    function frameForScroll() {
       const rect = trackEl.getBoundingClientRect();
       const total = rect.height - window.innerHeight;
       const scrolled = Math.min(Math.max(-rect.top, 0), total);
       const progress = total > 0 ? scrolled / total : 0;
-      const frameIndex = Math.min(
-        frameCount! - 1,
-        Math.floor(progress * frameCount!)
-      );
-      const img = imagesRef.current[frameIndex];
-      if (img && canvasEl.width && canvasEl.height && img.naturalWidth) {
-        ctx2d.clearRect(0, 0, canvasEl.width, canvasEl.height);
-
-        // object-fit: cover — preserve the frame's aspect ratio, crop
-        // whatever overflows instead of stretching it to fill the canvas.
-        const canvasRatio = canvasEl.width / canvasEl.height;
-        const imgRatio = img.naturalWidth / img.naturalHeight;
-
-        let drawWidth: number;
-        let drawHeight: number;
-        let offsetX = 0;
-        let offsetY = 0;
-
-        if (imgRatio > canvasRatio) {
-          // image is relatively wider than canvas -> match height, crop sides
-          drawHeight = canvasEl.height;
-          drawWidth = drawHeight * imgRatio;
-          offsetX = (canvasEl.width - drawWidth) / 2;
-        } else {
-          // image is relatively taller than canvas -> match width, crop top/bottom
-          drawWidth = canvasEl.width;
-          drawHeight = drawWidth / imgRatio;
-          offsetY = (canvasEl.height - drawHeight) / 2;
-        }
-
-        ctx2d.drawImage(img, offsetX, offsetY, drawWidth, drawHeight);
-      }
+      return Math.min(count - 1, Math.max(0, Math.floor(progress * count)));
     }
 
-    function onResize() {
+    function drawFrame(index: number) {
+      const img = imagesRef.current[index];
+      if (!img || !img.naturalWidth || !canvasEl.width || !canvasEl.height) return;
+
+      // object-fit: cover — preserve the frame's aspect ratio, crop
+      // whatever overflows instead of stretching it to fill the canvas.
+      const canvasRatio = canvasEl.width / canvasEl.height;
+      const imgRatio = img.naturalWidth / img.naturalHeight;
+      let drawWidth: number;
+      let drawHeight: number;
+      let offsetX = 0;
+      let offsetY = 0;
+      if (imgRatio > canvasRatio) {
+        drawHeight = canvasEl.height;
+        drawWidth = drawHeight * imgRatio;
+        offsetX = (canvasEl.width - drawWidth) / 2;
+      } else {
+        drawWidth = canvasEl.width;
+        drawHeight = drawWidth / imgRatio;
+        offsetY = (canvasEl.height - drawHeight) / 2;
+      }
+      ctx2d.drawImage(img, offsetX, offsetY, drawWidth, drawHeight);
+    }
+
+    // One redraw per animation frame, synced to the display refresh rate.
+    // Reading the scroll position here (rather than in a scroll handler)
+    // stays smooth during iOS momentum scrolling, where scroll events fire
+    // sparsely; unchanged frames are skipped so it's cheap when idle.
+    function tick() {
+      const index = frameForScroll();
+      if (index !== lastFrame) {
+        lastFrame = index;
+        drawFrame(index);
+        warm(index);
+      }
+      rafId = requestAnimationFrame(tick);
+    }
+
+    function start() {
+      if (running) return;
+      running = true;
+      rafId = requestAnimationFrame(tick);
+    }
+    function stop() {
+      running = false;
+      cancelAnimationFrame(rafId);
+    }
+
+    function sizeCanvas() {
       canvasEl.width = canvasEl.clientWidth;
       canvasEl.height = canvasEl.clientHeight;
-      draw();
+      lastFrame = -1;
+      drawFrame(frameForScroll());
     }
 
-    onResize();
-    window.addEventListener("scroll", draw, { passive: true });
-    window.addEventListener("resize", onResize);
+    sizeCanvas();
+
+    // Only run the render loop while the hero is actually on screen.
+    const io = new IntersectionObserver(
+      ([entry]) => (entry.isIntersecting ? start() : stop()),
+      { threshold: 0 }
+    );
+    io.observe(trackEl);
+
+    window.addEventListener("resize", sizeCanvas);
     return () => {
-      window.removeEventListener("scroll", draw);
-      window.removeEventListener("resize", onResize);
+      stop();
+      io.disconnect();
+      window.removeEventListener("resize", sizeCanvas);
     };
   }, [ready, hasSequence, frameCount, trackRef]);
 
