@@ -9,6 +9,7 @@ import {
   Building,
   Maximize2,
   LayoutGrid,
+  Box,
 } from "lucide-react";
 import FrameReveal from "@/components/FrameReveal";
 import ProjectHeroSlider from "@/components/ProjectHeroSlider";
@@ -182,9 +183,18 @@ export default async function ProjectDetailPage({
             className="mx-auto mb-10 max-w-2xl font-display text-3xl text-[#F7F4ED] text-balance md:text-4xl"
           />
           <div className="flex flex-wrap items-center justify-center gap-4">
+            {project.tour3D?.enabled && (
+              <Link
+                href={`/portfoy/${project.slug}/3d-tur`}
+                className="group inline-flex items-center gap-2 rounded-full bg-gold-600 px-7 py-3.5 text-sm font-medium text-petrol-900 transition-all duration-300 hover:bg-gold-400"
+              >
+                <Box className="h-4 w-4" strokeWidth={2} />
+                3D Bina Turunu Başlat
+              </Link>
+            )}
             <MagneticButton
               href="/iletisim"
-              className="group inline-flex items-center gap-2 rounded-full bg-gold-600 px-7 py-3.5 text-sm font-medium text-petrol-900 transition-all duration-300 hover:bg-gold-400"
+              className="group inline-flex items-center gap-2 rounded-full border border-[#F7F4ED]/30 px-7 py-3.5 text-sm font-medium text-[#F7F4ED] transition-all duration-300 hover:border-[#F7F4ED]/70"
             >
               Bize Ulaşın
               <ArrowRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-1" />
