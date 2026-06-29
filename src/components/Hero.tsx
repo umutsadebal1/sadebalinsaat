@@ -29,7 +29,7 @@ export default function Hero() {
   );
 
   return (
-    <section ref={trackRef} className="relative h-[450vh] w-full bg-petrol-900">
+    <section ref={trackRef} className="relative h-[300vh] w-full bg-petrol-900">
       <div className="sticky top-0 h-[100svh] w-full overflow-hidden">
         <div className="absolute inset-0">
           <ScrollSequence
