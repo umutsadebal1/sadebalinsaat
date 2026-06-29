@@ -22,6 +22,12 @@ const BuildingTour3D = dynamic(() => import("./BuildingTour3D"), {
   loading: () => <LoadingState />,
 });
 
+const LEGEND = [
+  { color: "#22c55e", label: "Müsait" },
+  { color: "#eab308", label: "Rezerve" },
+  { color: "#ef4444", label: "Satıldı" },
+];
+
 export default function BuildingTourClient({
   config,
   projectTitle,
@@ -32,6 +38,20 @@ export default function BuildingTourClient({
   return (
     <div className="relative h-[78svh] min-h-[480px] w-full overflow-hidden rounded-sm border border-line bg-bg-elevated">
       <BuildingTour3D config={config} projectTitle={projectTitle} />
+
+      {/* Colour legend */}
+      <div className="pointer-events-none absolute left-4 top-4 flex flex-col gap-1.5 rounded-md border border-line bg-bg-card/85 px-3 py-2.5 backdrop-blur-sm">
+        <span className="font-mono-label text-[10px] uppercase tracking-[0.12em] text-ink-soft">
+          Daire Durumu
+        </span>
+        {LEGEND.map((l) => (
+          <span key={l.label} className="flex items-center gap-2 text-xs text-ink">
+            <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: l.color }} />
+            {l.label}
+          </span>
+        ))}
+        <span className="mt-0.5 text-[10px] text-ink-soft">Temsilidir</span>
+      </div>
     </div>
   );
 }

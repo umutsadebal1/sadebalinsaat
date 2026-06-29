@@ -30,6 +30,28 @@ const FLOOR_H = 1.3;
 const FOOT_W = 4.2; // building footprint width (x)
 const FOOT_D = 5.0; // building footprint depth (z)
 
+/** Availability status — göstermelik (demo). Renkler gerçek doluluk değil. */
+type UnitStatus = "available" | "reserved" | "sold";
+const STATUS: Record<UnitStatus, { color: string; label: string }> = {
+  available: { color: "#22c55e", label: "Müsait" }, // yeşil
+  reserved: { color: "#eab308", label: "Rezerve" }, // sarı
+  sold: { color: "#ef4444", label: "Satıldı" }, // kırmızı
+};
+
+/**
+ * Deterministic demo status per unit. Alt katlar daha çok satılmış, üst katlar
+ * daha müsait — gerçekçi bir dağılım için. (İleride gerçek veriyle değişecek.)
+ */
+function unitStatus(floor: number, unit: number, floorCount: number): UnitStatus {
+  const h = (floor * 2654435761 + unit * 40503) >>> 0;
+  const r = h % 100;
+  const availabilityBoost = (floor / Math.max(1, floorCount - 1)) * 30;
+  const score = r + availabilityBoost;
+  if (score < 35) return "sold";
+  if (score < 60) return "reserved";
+  return "available";
+}
+
 /** Map a proportional image point to world XZ. `depth` keeps the satellite
  * un-stretched (plane depth = GROUND_W / imageAspect). */
 function toWorld(px: number, py: number, depth: number): [number, number] {
@@ -70,12 +92,11 @@ function Boundary({ depth }: { depth: number }) {
       const [x, z] = toWorld(px, py, depth);
       return new THREE.Vector3(x, 0.05, z);
     });
-    pts.push(pts[0].clone()); // close the polygon
+    pts.push(pts[0].clone());
     return pts;
   }, [depth]);
   const top = useMemo(() => points.map((p) => new THREE.Vector3(p.x, 0.07, p.z)), [points]);
 
-  // Thick faint gold glow + thin petrol-green line. Colours/widths are tunable.
   return (
     <group>
       <Line points={points} color={GOLD} lineWidth={8} transparent opacity={0.4} depthWrite={false} />
@@ -94,9 +115,8 @@ function Building({
   center: [number, number];
 }) {
   const { floorCount, unitsPerFloor } = config;
-  const [hoverFloor, setHoverFloor] = useState<number | null>(null);
-  const [selFloor, setSelFloor] = useState<number | null>(null);
-  const [selUnit, setSelUnit] = useState<number | null>(null);
+  const [hover, setHover] = useState<{ f: number; u: number } | null>(null);
+  const [sel, setSel] = useState<{ f: number; u: number } | null>(null);
 
   function setCursor(on: boolean) {
     document.body.style.cursor = on ? "pointer" : "auto";
@@ -104,124 +124,104 @@ function Building({
   useEffect(() => () => setCursor(false), []);
 
   const floors = Array.from({ length: floorCount }, (_, i) => i);
+  const unitZ = (u: number) => -FOOT_D / 2 + (u + 0.5) * (FOOT_D / unitsPerFloor);
 
   return (
-    <group
-      position={[center[0], 0, center[1]]}
-      onPointerMissed={() => {
-        setSelFloor(null);
-        setSelUnit(null);
-      }}
-    >
+    <group position={[center[0], 0, center[1]]} onPointerMissed={() => setSel(null)}>
       {floors.map((f) => {
         const y = f * FLOOR_H + FLOOR_H / 2;
-        const active = selFloor === f;
-        const hovered = hoverFloor === f;
         return (
           <group key={f}>
-            <mesh
-              position={[0, y, 0]}
-              onPointerOver={(e) => {
-                e.stopPropagation();
-                setHoverFloor(f);
-                setCursor(true);
-              }}
-              onPointerOut={(e) => {
-                e.stopPropagation();
-                setHoverFloor((cur) => (cur === f ? null : cur));
-                setCursor(false);
-              }}
-              onClick={(e) => {
-                e.stopPropagation();
-                setSelFloor(f);
-                setSelUnit(null);
-              }}
-            >
-              <boxGeometry args={[FOOT_W, FLOOR_H * 0.92, FOOT_D]} />
-              <meshStandardMaterial
-                color={active ? "#fdf8ee" : hovered ? "#f0ede6" : "#e6e3db"}
-                emissive={active || hovered ? GOLD : "#000000"}
-                emissiveIntensity={active ? 0.18 : hovered ? 0.08 : 0}
-                roughness={0.85}
-                metalness={0.05}
-              />
+            {/* Structural slab (neutral) */}
+            <mesh position={[0, y, 0]}>
+              <boxGeometry args={[FOOT_W * 0.95, FLOOR_H * 0.9, FOOT_D * 0.95]} />
+              <meshStandardMaterial color="#e6e3db" roughness={0.85} metalness={0.05} />
             </mesh>
-            {/* Gold facade strip at the top of each floor */}
+            {/* Gold facade strip */}
             <mesh position={[0, y + FLOOR_H * 0.44, 0]}>
-              <boxGeometry args={[FOOT_W * 1.02, FLOOR_H * 0.1, FOOT_D * 1.02]} />
+              <boxGeometry args={[FOOT_W * 1.0, FLOOR_H * 0.08, FOOT_D * 1.0]} />
               <meshStandardMaterial color={GOLD} metalness={0.4} roughness={0.5} />
             </mesh>
 
-            {/* Units on the selected floor */}
-            {active &&
-              Array.from({ length: unitsPerFloor }, (_, u) => {
-                const depthEach = (FOOT_D / unitsPerFloor) * 0.86;
-                const uz = -FOOT_D / 2 + (u + 0.5) * (FOOT_D / unitsPerFloor);
-                const uSel = selUnit === u;
-                return (
-                  <mesh
-                    key={u}
-                    position={[0, y, uz]}
-                    onPointerOver={(e) => {
-                      e.stopPropagation();
-                      setCursor(true);
-                    }}
-                    onPointerOut={(e) => {
-                      e.stopPropagation();
-                      setCursor(false);
-                    }}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setSelUnit(u);
-                    }}
-                  >
-                    <boxGeometry args={[FOOT_W * 1.06, FLOOR_H * 0.74, depthEach]} />
-                    <meshStandardMaterial
-                      color={uSel ? GOLD : "#9fb1ad"}
-                      emissive={uSel ? GOLD : PETROL}
-                      emissiveIntensity={uSel ? 0.35 : 0.12}
-                      transparent
-                      opacity={0.92}
-                    />
-                  </mesh>
-                );
-              })}
-
-            {/* Info card for the selected unit */}
-            {active &&
-              selUnit !== null &&
-              (() => {
-                const uz = -FOOT_D / 2 + (selUnit + 0.5) * (FOOT_D / unitsPerFloor);
-                const m2 = 85 + ((f + selUnit) % 4) * 12;
-                return (
-                  <Html
-                    position={[FOOT_W / 2 + 0.4, y + 0.5, uz]}
-                    distanceFactor={14}
-                    style={{ pointerEvents: "auto" }}
-                  >
-                    <div className="w-52 rounded-lg border border-line bg-bg-card p-4 text-ink shadow-xl">
-                      <p className="font-mono-label text-[10px] uppercase tracking-[0.12em] text-gold-700">
-                        Kat {f + 1} · Daire {selUnit + 1}
-                      </p>
-                      <p className="mt-1 font-display text-lg">~{m2} m²</p>
-                      <p className="mt-0.5 text-xs text-ink-soft">
-                        Durum: <span className="text-gold-700">Müsait</span>
-                      </p>
-                      <a
-                        href={waLink(projectTitle, f + 1, selUnit + 1)}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="mt-3 flex items-center justify-center gap-2 rounded-md bg-[#25D366] px-3 py-2 text-xs font-medium text-white transition-colors hover:bg-[#1ebe5b]"
-                      >
-                        WhatsApp ile Bilgi Al
-                      </a>
-                    </div>
-                  </Html>
-                );
-              })()}
+            {/* ALL units, always visible — translucent, coloured by status */}
+            {Array.from({ length: unitsPerFloor }, (_, u) => {
+              const st = unitStatus(f, u, floorCount);
+              const sc = STATUS[st].color;
+              const isActive = (hover?.f === f && hover?.u === u) || (sel?.f === f && sel?.u === u);
+              const depthEach = (FOOT_D / unitsPerFloor) * 0.82;
+              return (
+                <mesh
+                  key={u}
+                  position={[0, y, unitZ(u)]}
+                  onPointerOver={(e) => {
+                    e.stopPropagation();
+                    setHover({ f, u });
+                    setCursor(true);
+                  }}
+                  onPointerOut={(e) => {
+                    e.stopPropagation();
+                    setHover((cur) => (cur?.f === f && cur?.u === u ? null : cur));
+                    setCursor(false);
+                  }}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setSel({ f, u });
+                  }}
+                >
+                  <boxGeometry args={[FOOT_W * 1.05, FLOOR_H * 0.66, depthEach]} />
+                  <meshStandardMaterial
+                    color={sc}
+                    emissive={sc}
+                    emissiveIntensity={isActive ? 0.55 : 0.28}
+                    transparent
+                    opacity={isActive ? 0.92 : 0.5}
+                  />
+                </mesh>
+              );
+            })}
           </group>
         );
       })}
+
+      {/* Info card for the selected unit */}
+      {sel &&
+        (() => {
+          const y = sel.f * FLOOR_H + FLOOR_H / 2;
+          const st = unitStatus(sel.f, sel.u, floorCount);
+          const info = STATUS[st];
+          const m2 = 85 + ((sel.f + sel.u) % 4) * 12;
+          return (
+            <Html
+              position={[FOOT_W / 2 + 0.4, y + 0.5, unitZ(sel.u)]}
+              distanceFactor={14}
+              style={{ pointerEvents: "auto" }}
+            >
+              <div className="w-52 rounded-lg border border-line bg-bg-card p-4 text-ink shadow-xl">
+                <p className="font-mono-label text-[10px] uppercase tracking-[0.12em] text-gold-700">
+                  Kat {sel.f + 1} · Daire {sel.u + 1}
+                </p>
+                <p className="mt-1 font-display text-lg">~{m2} m²</p>
+                <p className="mt-1 flex items-center gap-1.5 text-xs text-ink-soft">
+                  <span
+                    className="inline-block h-2.5 w-2.5 rounded-full"
+                    style={{ backgroundColor: info.color }}
+                  />
+                  Durum: <span className="font-medium text-ink">{info.label}</span>
+                </p>
+                {st !== "sold" && (
+                  <a
+                    href={waLink(projectTitle, sel.f + 1, sel.u + 1)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="mt-3 flex items-center justify-center gap-2 rounded-md bg-[#25D366] px-3 py-2 text-xs font-medium text-white transition-colors hover:bg-[#1ebe5b]"
+                  >
+                    WhatsApp ile Bilgi Al
+                  </a>
+                )}
+              </div>
+            </Html>
+          );
+        })()}
     </group>
   );
 }
