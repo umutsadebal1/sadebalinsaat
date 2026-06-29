@@ -19,6 +19,7 @@ import ProjectMap from "@/components/ProjectMap";
 import Reveal from "@/components/Reveal";
 import AnimatedHeading from "@/components/AnimatedHeading";
 import MagneticButton from "@/components/MagneticButton";
+import { SetWhatsAppProject } from "@/components/WhatsAppContext";
 import { findProject, deliveryLabel } from "@/lib/projects";
 import { readProjects } from "@/lib/data";
 
@@ -71,6 +72,9 @@ export default async function ProjectDetailPage({
 
   return (
     <div>
+      {/* Feed the project name to the floating WhatsApp button's message */}
+      <SetWhatsAppProject title={project.title} />
+
       {/* A) Full-screen auto slider */}
       <ProjectHeroSlider
         images={sliderImages}
