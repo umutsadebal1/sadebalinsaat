@@ -58,7 +58,11 @@ export default async function Tour3DPage({
         </p>
       </div>
 
-      <BuildingTourClient config={project.tour3D} projectTitle={project.title} />
+      <BuildingTourClient
+        config={project.tour3D}
+        projectTitle={project.title}
+        projectSlug={project.slug}
+      />
 
       <p className="mt-4 text-center font-mono-label text-[11px] uppercase tracking-[0.1em] text-ink-soft">
         Sürükleyerek döndürün · tekerlekle yakınlaşın · daire durumlarını renklerden görün, detay için tıklayın

@@ -242,8 +242,8 @@ function Scene({
   const buildingTop = config.floorCount * FLOOR_H;
   return (
     <>
-      <ambientLight intensity={0.7} />
-      <directionalLight position={[20, 30, 15]} intensity={1.6} />
+      <ambientLight intensity={0.9} />
+      <directionalLight position={[20, 30, 15]} intensity={1.7} />
       <directionalLight position={[-15, 12, -10]} intensity={0.4} />
 
       <Ground texture={texture} depth={depth} />
@@ -316,7 +316,7 @@ export default function BuildingTour3D({
       dpr={[1, 2]}
       gl={{ antialias: true }}
     >
-      <color attach="background" args={["#dfd9cf"]} />
+      <color attach="background" args={["#0F3D3E"]} />
       <Scene
         config={config}
         projectTitle={projectTitle}
