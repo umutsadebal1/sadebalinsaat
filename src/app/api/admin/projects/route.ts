@@ -47,6 +47,7 @@ export async function POST(req: NextRequest) {
     rooms: body.rooms ?? "",
     constructionProgress: body.constructionProgress ?? [],
     floorPlans: body.floorPlans ?? [],
+    tour3D: body.tour3D,
     gallery: body.gallery ?? [],
   };
   projects.push(project);

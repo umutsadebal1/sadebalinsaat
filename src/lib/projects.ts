@@ -8,6 +8,14 @@ export type ConstructionStage = { stage: string; percent: number };
 /** An interactive floor-plan entry (e.g. "2+1" with its plan image). */
 export type FloorPlan = { type: string; imageUrl: string };
 
+/** Config for the representational 3D building tour. */
+export type Tour3DConfig = {
+  enabled: boolean;
+  floorCount: number;
+  unitsPerFloor: number;
+  satelliteImageUrl: string;
+};
+
 export type Project = {
   slug: string;
   title: string;
@@ -36,6 +44,8 @@ export type Project = {
   constructionProgress?: ConstructionStage[];
   /** Interactive floor plans. Section is hidden when empty. */
   floorPlans?: FloorPlan[];
+  /** Representational 3D building tour. Button shown only when enabled. */
+  tour3D?: Tour3DConfig;
 };
 
 /**

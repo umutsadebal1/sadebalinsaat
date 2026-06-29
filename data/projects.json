@@ -24,6 +24,12 @@
       { "type": "2+1", "imageUrl": "/images/projects/citylife/citylife-salon.jpg" },
       { "type": "3+1", "imageUrl": "/images/projects/citylife/citylife-banyo.jpg" }
     ],
+    "tour3D": {
+      "enabled": true,
+      "floorCount": 10,
+      "unitsPerFloor": 4,
+      "satelliteImageUrl": "/images/satellite/sadebal-citylife-satellite.jpg"
+    },
     "gallery": [
       {
         "src": "/images/projects/citylife/citylife-dis-cephe-gunduz-1.jpg",
