@@ -14,6 +14,9 @@ import "@fontsource/jetbrains-mono/500.css";
 import "./globals.css";
 import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
+import { dirFor } from "@/lib/i18n";
+import { getLocale } from "@/lib/locale-server";
+import { LocaleProvider } from "@/components/LocaleProvider";
 
 const siteUrl = "https://www.sadebalyapi.com";
 
@@ -66,14 +69,16 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const locale = await getLocale();
   return (
     <html
-      lang="tr"
+      lang={locale}
+      dir={dirFor(locale)}
       className="h-full antialiased"
       suppressHydrationWarning
     >
@@ -100,7 +105,7 @@ export default function RootLayout({
         />
       </head>
       <body className="min-h-full flex flex-col bg-bg text-ink">
-        {children}
+        <LocaleProvider locale={locale}>{children}</LocaleProvider>
         <Analytics />
         <SpeedInsights />
       </body>

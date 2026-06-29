@@ -4,6 +4,7 @@ import ScrollProgress from "@/components/ScrollProgress";
 import PageTransition from "@/components/PageTransition";
 import FloatingThemeToggle from "@/components/FloatingThemeToggle";
 import WhatsAppButton from "@/components/WhatsAppButton";
+import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { WhatsAppProvider } from "@/components/WhatsAppContext";
 
 export default function SiteLayout({
@@ -18,6 +19,7 @@ export default function SiteLayout({
       </main>
       <Footer />
       <FloatingThemeToggle />
+      <LanguageSwitcher />
       <WhatsAppButton />
     </WhatsAppProvider>
   );

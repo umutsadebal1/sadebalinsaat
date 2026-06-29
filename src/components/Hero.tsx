@@ -11,12 +11,15 @@ import {
 import { Sparkles, Loader2, ChevronDown } from "lucide-react";
 import HeroSequencePlayer from "./HeroSequencePlayer";
 import HeroContent from "./HeroContent";
+import { useT } from "./LocaleProvider";
 
 export default function Hero() {
   // Phones load a half-resolution frame set (960×540) — cheaper to decode.
   const [isMobile] = useState(
     () => typeof window !== "undefined" && window.matchMedia("(max-width: 768px)").matches
   );
+
+  const t = useT();
 
   // Playback is driven by time, not scroll: `progress` (0→1) is animated when
   // the visitor taps play, and HeroSequencePlayer draws the matching frame.
@@ -88,7 +91,7 @@ export default function Hero() {
               ) : (
                 <Loader2 className="h-5 w-5 animate-spin" strokeWidth={1.8} />
               )}
-              Hayallerinizi Gerçeğe Dönüştürün
+              {t("intro.button")}
             </motion.button>
             <motion.span
               initial={{ opacity: 0 }}
@@ -96,7 +99,7 @@ export default function Hero() {
               transition={{ duration: 0.8, delay: 1 }}
               className="mt-5 font-mono-label text-[10px] uppercase tracking-[0.2em] text-[#F7F4ED]/50"
             >
-              {ready ? "Tıklayın · Tanıtımı izleyin" : "Tanıtım hazırlanıyor…"}
+              {ready ? t("intro.hint") : t("intro.loading")}
             </motion.span>
           </motion.div>
         )}

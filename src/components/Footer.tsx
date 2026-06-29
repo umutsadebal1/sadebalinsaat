@@ -2,6 +2,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { Phone, Mail, MapPin } from "lucide-react";
 import { readSite } from "@/lib/data";
+import { getT } from "@/lib/locale-server";
 
 function InstagramIcon(props: React.SVGProps<SVGSVGElement>) {
   return (
@@ -33,9 +34,10 @@ function LinkedinIcon(props: React.SVGProps<SVGSVGElement>) {
   );
 }
 
-export default function Footer() {
+export default async function Footer() {
   const year = new Date().getFullYear();
   const siteConfig = readSite();
+  const { t } = await getT();
 
   return (
     <footer className="border-t border-line bg-bg-elevated">
@@ -52,26 +54,25 @@ export default function Footer() {
               />
             </Link>
             <p className="text-sm leading-relaxed text-ink-soft max-w-xs">
-              Konut ve ticari projelerde sağlam mühendislik, zamansız mimari
-              anlayışıyla geleceğin yapılarını inşa ediyoruz.
+              {t("footer.blurb")}
             </p>
           </div>
 
           <div>
             <h3 className="font-mono-label text-[11px] uppercase tracking-[0.15em] text-gold-700 mb-4">
-              Keşfet
+              {t("footer.explore")}
             </h3>
             <ul className="flex flex-col gap-2.5 text-sm text-ink-soft">
-              <li><Link href="/" className="hover:text-ink transition-colors">Anasayfa</Link></li>
-              <li><Link href="/portfoy" className="hover:text-ink transition-colors">Portföy</Link></li>
-              <li><Link href="/hakkimizda" className="hover:text-ink transition-colors">Hakkımızda</Link></li>
-              <li><Link href="/iletisim" className="hover:text-ink transition-colors">İletişim</Link></li>
+              <li><Link href="/" className="hover:text-ink transition-colors">{t("nav.home")}</Link></li>
+              <li><Link href="/portfoy" className="hover:text-ink transition-colors">{t("nav.portfolio")}</Link></li>
+              <li><Link href="/hakkimizda" className="hover:text-ink transition-colors">{t("nav.about")}</Link></li>
+              <li><Link href="/iletisim" className="hover:text-ink transition-colors">{t("nav.contact")}</Link></li>
             </ul>
           </div>
 
           <div>
             <h3 className="font-mono-label text-[11px] uppercase tracking-[0.15em] text-gold-700 mb-4">
-              İletişim
+              {t("footer.contact")}
             </h3>
             <ul className="flex flex-col gap-3 text-sm text-ink-soft">
               <li className="flex items-center gap-2">
@@ -95,7 +96,7 @@ export default function Footer() {
 
           <div>
             <h3 className="font-mono-label text-[11px] uppercase tracking-[0.15em] text-gold-700 mb-4">
-              Sosyal
+              {t("footer.social")}
             </h3>
             <div className="flex items-center gap-3">
               <a
@@ -125,10 +126,10 @@ export default function Footer() {
 
         <div className="mt-12 flex flex-col-reverse items-center gap-4 border-t border-line pt-6 md:flex-row md:justify-between">
           <p className="font-mono-label text-[11px] tracking-wide text-ink-soft">
-            © {year} Sadebal Yapı. Tüm hakları saklıdır.
+            © {year} Sadebal Yapı. {t("footer.rights")}
           </p>
           <p className="font-mono-label text-[11px] tracking-wide text-ink-soft">
-            Sadelikte güç, kalitede iz.
+            {t("footer.tagline")}
           </p>
         </div>
       </div>

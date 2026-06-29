@@ -5,12 +5,13 @@ import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Menu, X } from "lucide-react";
+import { useT } from "./LocaleProvider";
 
 const LINKS = [
-  { href: "/", label: "Anasayfa" },
-  { href: "/portfoy", label: "Portföy" },
-  { href: "/hakkimizda", label: "Hakkımızda" },
-  { href: "/iletisim", label: "İletişim" },
+  { href: "/", key: "nav.home" },
+  { href: "/portfoy", key: "nav.portfolio" },
+  { href: "/hakkimizda", key: "nav.about" },
+  { href: "/iletisim", key: "nav.contact" },
 ];
 
 // Two links on each side of the centered logo.
@@ -19,6 +20,7 @@ const RIGHT_LINKS = LINKS.slice(2);
 
 export default function Navbar() {
   const pathname = usePathname();
+  const t = useT();
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
 
@@ -71,7 +73,7 @@ export default function Navbar() {
         {/* Left links (desktop) */}
         <ul className="col-start-1 hidden items-center gap-7 justify-self-start font-mono-label text-[12px] uppercase tracking-[0.12em] md:flex">
           {LEFT_LINKS.map((link) => (
-            <NavLink key={link.href} {...link} />
+            <NavLink key={link.href} href={link.href} label={t(link.key)} />
           ))}
         </ul>
 
@@ -95,7 +97,7 @@ export default function Navbar() {
         <div className="col-start-3 flex items-center justify-end gap-7 justify-self-end">
           <ul className="hidden items-center gap-7 font-mono-label text-[12px] uppercase tracking-[0.12em] md:flex">
             {RIGHT_LINKS.map((link) => (
-              <NavLink key={link.href} {...link} />
+              <NavLink key={link.href} href={link.href} label={t(link.key)} />
             ))}
           </ul>
           <button
@@ -126,7 +128,7 @@ export default function Navbar() {
                     active ? "bg-bg-elevated text-gold-700" : "text-ink-soft hover:bg-bg-elevated hover:text-ink"
                   }`}
                 >
-                  {link.label}
+                  {t(link.key)}
                 </Link>
               </li>
             );

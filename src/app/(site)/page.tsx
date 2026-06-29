@@ -9,12 +9,14 @@ import AnimatedHeading from "@/components/AnimatedHeading";
 import MagneticButton from "@/components/MagneticButton";
 import Testimonials from "@/components/Testimonials";
 import { readProjects, readSite } from "@/lib/data";
+import { getT } from "@/lib/locale-server";
 
 export const dynamic = "force-dynamic";
 
-export default function Home() {
+export default async function Home() {
   const projects = readProjects();
   const siteConfig = readSite();
+  const { t } = await getT();
   return (
     <>
       <Hero />
@@ -23,7 +25,7 @@ export default function Home() {
       <section className="mx-auto max-w-6xl px-5 md:px-8 py-24 md:py-32">
         <Reveal>
           <FrameReveal
-            label={projects.length > 1 ? "Projelerimiz" : "Devam Eden Proje"}
+            label={projects.length > 1 ? t("home.featured.many") : t("home.featured.one")}
             className="mb-10"
           />
         </Reveal>
@@ -32,13 +34,13 @@ export default function Home() {
           <Reveal delay={60}>
             <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between mb-12">
               <h2 className="font-display text-3xl md:text-4xl text-ink max-w-md text-balance">
-                Devam eden ve tamamlanan işlerimizden bir kesit
+                {t("home.featured.heading")}
               </h2>
               <Link
                 href="/portfoy"
                 className="group inline-flex items-center gap-1.5 font-mono-label text-[12px] uppercase tracking-[0.12em] text-gold-700 shrink-0"
               >
-                Tüm Portföy
+                {t("home.allPortfolio")}
                 <ArrowRight className="h-3.5 w-3.5 transition-transform duration-300 group-hover:translate-x-1" />
               </Link>
             </div>
@@ -87,7 +89,7 @@ export default function Home() {
                 href={`/portfoy/${projects[0].slug}`}
                 className="group inline-flex items-center gap-1.5 font-mono-label text-[12px] uppercase tracking-[0.12em] text-gold-700"
               >
-                Proje Galerisini Görün
+                {t("home.viewGallery")}
                 <ArrowRight className="h-3.5 w-3.5 transition-transform duration-300 group-hover:translate-x-1" />
               </Link>
             </Reveal>
@@ -131,10 +133,10 @@ export default function Home() {
       <section className="bg-bg-elevated border-y border-line">
         <div className="mx-auto max-w-6xl px-5 md:px-8 py-24 md:py-32">
           <Reveal>
-            <FrameReveal label="Neden Sadebal Yapı" className="mb-10" />
+            <FrameReveal label={t("home.why.label")} className="mb-10" />
           </Reveal>
           <AnimatedHeading
-            text="Her projede aynı titizlik, her teslimde aynı güven."
+            text={t("home.why.heading")}
             className="font-display text-3xl md:text-4xl text-ink max-w-xl mb-14 text-balance"
           />
 
@@ -146,7 +148,7 @@ export default function Home() {
       {siteConfig.testimonials && siteConfig.testimonials.length > 0 && (
         <section className="mx-auto max-w-6xl px-5 md:px-8 py-24 md:py-32">
           <Reveal>
-            <FrameReveal label="Referanslar" className="mb-14" />
+            <FrameReveal label={t("home.testimonials.label")} className="mb-14" />
           </Reveal>
           <Testimonials items={siteConfig.testimonials} />
         </section>
@@ -157,11 +159,11 @@ export default function Home() {
         <div className="mx-auto max-w-6xl px-5 md:px-8 py-24 md:py-32 text-center">
           <Reveal>
             <p className="font-mono-label text-[12px] uppercase tracking-[0.25em] text-gold-400 mb-5">
-              Projenizi Birlikte Hayata Geçirelim
+              {t("home.cta.eyebrow")}
             </p>
           </Reveal>
           <AnimatedHeading
-            text="Hayalinizdeki yapı, sağlam bir temelle başlar."
+            text={t("home.cta.heading")}
             className="font-display text-3xl md:text-5xl text-[#F7F4ED] max-w-2xl mx-auto mb-10 text-balance"
           />
           <Reveal delay={200}>
@@ -169,7 +171,7 @@ export default function Home() {
               href="/iletisim"
               className="group inline-flex items-center gap-2 rounded-full bg-gold-600 px-7 py-3.5 text-sm font-medium text-petrol-900 transition-all duration-300 hover:bg-gold-400 hover:shadow-[0_14px_40px_-10px_rgba(201,162,75,0.7)]"
             >
-              Hemen İletişime Geçin
+              {t("home.cta.button")}
               <ArrowRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-1" />
             </MagneticButton>
           </Reveal>
