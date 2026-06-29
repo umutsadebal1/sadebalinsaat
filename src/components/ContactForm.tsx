@@ -4,14 +4,35 @@ import { useState } from "react";
 import { Send } from "lucide-react";
 
 export default function ContactForm() {
-  const [status, setStatus] = useState<"idle" | "sending" | "sent">("idle");
+  const [status, setStatus] = useState<"idle" | "sending" | "sent" | "error">("idle");
 
-  function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    const form = e.currentTarget;
+    const fd = new FormData(form);
+    const payload = {
+      name: fd.get("name"),
+      phone: fd.get("phone"),
+      email: fd.get("email"),
+      subject: fd.get("subject"),
+      message: fd.get("message"),
+    };
     setStatus("sending");
-    // NOTE: wire this up to a real endpoint (e.g. an API route that
-    // sends email via Resend/Nodemailer) before going live.
-    setTimeout(() => setStatus("sent"), 900);
+    try {
+      const res = await fetch("/api/contact", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      if (res.ok) {
+        setStatus("sent");
+        form.reset();
+      } else {
+        setStatus("error");
+      }
+    } catch {
+      setStatus("error");
+    }
   }
 
   if (status === "sent") {
@@ -56,6 +77,11 @@ export default function ContactForm() {
         {status === "sending" ? "Gönderiliyor..." : "Mesajı Gönder"}
         <Send className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-1" />
       </button>
+      {status === "error" && (
+        <p className="text-sm text-red-500">
+          Mesaj gönderilemedi. Lütfen tekrar deneyin veya bizi arayın.
+        </p>
+      )}
     </form>
   );
 }
