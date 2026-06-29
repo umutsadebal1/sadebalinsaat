@@ -20,23 +20,23 @@ const ARSA_BOUNDARY_POINTS: [number, number][] = [
   [0.5061, 0.3704],
 ];
 
-const GROUND_SIZE = 60; // world units; square plane matched to the satellite image
+const GROUND_W = 60; // world units along x; depth (z) derives from image aspect
 const DIRT_COLOR = "#8B7355"; // fallback when the satellite texture is missing
 const PETROL = "#0F3D3E";
 const GOLD = "#C9A24B";
 const PHONE = "905324618398";
 
 const FLOOR_H = 1.3;
-const FOOT_W = 4.4; // building footprint width (x)
-const FOOT_D = 7.6; // building footprint depth (z)
+const FOOT_W = 4.2; // building footprint width (x)
+const FOOT_D = 5.0; // building footprint depth (z)
 
-/** Map a proportional image point to world XZ (consistent with the texture). */
-function toWorld(px: number, py: number): [number, number] {
-  return [(px - 0.5) * GROUND_SIZE, (py - 0.5) * GROUND_SIZE];
+/** Map a proportional image point to world XZ. `depth` keeps the satellite
+ * un-stretched (plane depth = GROUND_W / imageAspect). */
+function toWorld(px: number, py: number, depth: number): [number, number] {
+  return [(px - 0.5) * GROUND_W, (py - 0.5) * depth];
 }
 
-// Building sits at the centroid of the boundary.
-const CENTER = (() => {
+function centroid(depth: number): [number, number] {
   const n = ARSA_BOUNDARY_POINTS.length;
   let sx = 0,
     sy = 0;
@@ -44,44 +44,18 @@ const CENTER = (() => {
     sx += px;
     sy += py;
   }
-  return toWorld(sx / n, sy / n);
-})();
-const CX = CENTER[0];
-const CZ = CENTER[1];
+  return toWorld(sx / n, sy / n, depth);
+}
 
 function waLink(projectTitle: string, floor: number, unit: number) {
   const msg = `Merhaba, ${projectTitle} - Kat ${floor}, Daire ${unit} hakkında bilgi almak istiyorum.`;
   return `https://wa.me/${PHONE}?text=${encodeURIComponent(msg)}`;
 }
 
-function Ground({ satelliteUrl }: { satelliteUrl?: string }) {
-  const [texture, setTexture] = useState<THREE.Texture | null>(null);
-
-  useEffect(() => {
-    if (!satelliteUrl) return;
-    let active = true;
-    // Imperative load so a missing file falls back silently to a flat colour
-    // instead of throwing (which would crash the Suspense boundary).
-    new THREE.TextureLoader().load(
-      satelliteUrl,
-      (tex) => {
-        if (!active) return;
-        tex.colorSpace = THREE.SRGBColorSpace;
-        setTexture(tex);
-      },
-      undefined,
-      () => {
-        /* dosya yok → düz toprak rengi fallback */
-      }
-    );
-    return () => {
-      active = false;
-    };
-  }, [satelliteUrl]);
-
+function Ground({ texture, depth }: { texture: THREE.Texture | null; depth: number }) {
   return (
-    <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 0]}>
-      <planeGeometry args={[GROUND_SIZE, GROUND_SIZE]} />
+    <mesh rotation={[-Math.PI / 2, 0, 0]}>
+      <planeGeometry args={[GROUND_W, depth]} />
       <meshStandardMaterial
         map={texture ?? undefined}
         color={texture ? "#ffffff" : DIRT_COLOR}
@@ -90,19 +64,18 @@ function Ground({ satelliteUrl }: { satelliteUrl?: string }) {
   );
 }
 
-function Boundary() {
+function Boundary({ depth }: { depth: number }) {
   const points = useMemo(() => {
     const pts = ARSA_BOUNDARY_POINTS.map(([px, py]) => {
-      const [x, z] = toWorld(px, py);
+      const [x, z] = toWorld(px, py, depth);
       return new THREE.Vector3(x, 0.05, z);
     });
     pts.push(pts[0].clone()); // close the polygon
     return pts;
-  }, []);
+  }, [depth]);
   const top = useMemo(() => points.map((p) => new THREE.Vector3(p.x, 0.07, p.z)), [points]);
 
-  // Two stacked lines: a thick faint gold glow + a thin petrol-green line.
-  // Colours/widths are intentionally easy to tune.
+  // Thick faint gold glow + thin petrol-green line. Colours/widths are tunable.
   return (
     <group>
       <Line points={points} color={GOLD} lineWidth={8} transparent opacity={0.4} depthWrite={false} />
@@ -114,9 +87,11 @@ function Boundary() {
 function Building({
   config,
   projectTitle,
+  center,
 }: {
   config: Tour3DConfig;
   projectTitle: string;
+  center: [number, number];
 }) {
   const { floorCount, unitsPerFloor } = config;
   const [hoverFloor, setHoverFloor] = useState<number | null>(null);
@@ -132,7 +107,7 @@ function Building({
 
   return (
     <group
-      position={[CX, 0, CZ]}
+      position={[center[0], 0, center[1]]}
       onPointerMissed={() => {
         setSelFloor(null);
         setSelUnit(null);
@@ -144,7 +119,6 @@ function Building({
         const hovered = hoverFloor === f;
         return (
           <group key={f}>
-            {/* Floor slab */}
             <mesh
               position={[0, y, 0]}
               onPointerOver={(e) => {
@@ -166,7 +140,7 @@ function Building({
               <boxGeometry args={[FOOT_W, FLOOR_H * 0.92, FOOT_D]} />
               <meshStandardMaterial
                 color={active ? "#fdf8ee" : hovered ? "#f0ede6" : "#e6e3db"}
-                emissive={active ? GOLD : hovered ? GOLD : "#000000"}
+                emissive={active || hovered ? GOLD : "#000000"}
                 emissiveIntensity={active ? 0.18 : hovered ? 0.08 : 0}
                 roughness={0.85}
                 metalness={0.05}
@@ -181,7 +155,7 @@ function Building({
             {/* Units on the selected floor */}
             {active &&
               Array.from({ length: unitsPerFloor }, (_, u) => {
-                const depth = (FOOT_D / unitsPerFloor) * 0.86;
+                const depthEach = (FOOT_D / unitsPerFloor) * 0.86;
                 const uz = -FOOT_D / 2 + (u + 0.5) * (FOOT_D / unitsPerFloor);
                 const uSel = selUnit === u;
                 return (
@@ -201,7 +175,7 @@ function Building({
                       setSelUnit(u);
                     }}
                   >
-                    <boxGeometry args={[FOOT_W * 1.06, FLOOR_H * 0.74, depth]} />
+                    <boxGeometry args={[FOOT_W * 1.06, FLOOR_H * 0.74, depthEach]} />
                     <meshStandardMaterial
                       color={uSel ? GOLD : "#9fb1ad"}
                       emissive={uSel ? GOLD : PETROL}
@@ -223,7 +197,6 @@ function Building({
                   <Html
                     position={[FOOT_W / 2 + 0.4, y + 0.5, uz]}
                     distanceFactor={14}
-                    occlude={false}
                     style={{ pointerEvents: "auto" }}
                   >
                     <div className="w-52 rounded-lg border border-line bg-bg-card p-4 text-ink shadow-xl">
@@ -253,7 +226,19 @@ function Building({
   );
 }
 
-function Scene({ config, projectTitle }: { config: Tour3DConfig; projectTitle: string }) {
+function Scene({
+  config,
+  projectTitle,
+  texture,
+  depth,
+  center,
+}: {
+  config: Tour3DConfig;
+  projectTitle: string;
+  texture: THREE.Texture | null;
+  depth: number;
+  center: [number, number];
+}) {
   const buildingTop = config.floorCount * FLOOR_H;
   return (
     <>
@@ -261,17 +246,17 @@ function Scene({ config, projectTitle }: { config: Tour3DConfig; projectTitle: s
       <directionalLight position={[20, 30, 15]} intensity={1.6} />
       <directionalLight position={[-15, 12, -10]} intensity={0.4} />
 
-      <Ground satelliteUrl={config.satelliteImageUrl} />
-      <Boundary />
-      <Building config={config} projectTitle={projectTitle} />
+      <Ground texture={texture} depth={depth} />
+      <Boundary depth={depth} />
+      <Building config={config} projectTitle={projectTitle} center={center} />
 
       <OrbitControls
         makeDefault
-        target={[CX, buildingTop / 2, CZ]}
+        target={[center[0], buildingTop / 2, center[1]]}
         enableDamping
         dampingFactor={0.08}
         minDistance={8}
-        maxDistance={55}
+        maxDistance={60}
         maxPolarAngle={Math.PI / 2.15}
       />
     </>
@@ -285,15 +270,60 @@ export default function BuildingTour3D({
   config: Tour3DConfig;
   projectTitle: string;
 }) {
+  // Load the satellite once (outside the canvas) so we know its aspect ratio
+  // and can size the ground plane without stretching. Missing file → square
+  // plane + dirt colour fallback (no crash).
+  const [scene, setScene] = useState<{ texture: THREE.Texture | null; depth: number } | null>(null);
+
+  useEffect(() => {
+    let active = true;
+    const finish = (texture: THREE.Texture | null, aspect: number) => {
+      if (active) setScene({ texture, depth: GROUND_W / aspect });
+    };
+    if (!config.satelliteImageUrl) {
+      finish(null, 1);
+      return;
+    }
+    new THREE.TextureLoader().load(
+      config.satelliteImageUrl,
+      (tex) => {
+        tex.colorSpace = THREE.SRGBColorSpace;
+        const img = tex.image as { width?: number; height?: number } | undefined;
+        const aspect = img?.width && img?.height ? img.width / img.height : 1;
+        finish(tex, aspect);
+      },
+      undefined,
+      () => finish(null, 1)
+    );
+    return () => {
+      active = false;
+    };
+  }, [config.satelliteImageUrl]);
+
+  if (!scene) {
+    return (
+      <div className="flex h-full w-full items-center justify-center bg-bg-elevated">
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-line border-t-gold-600" />
+      </div>
+    );
+  }
+
+  const center = centroid(scene.depth);
   const buildingTop = config.floorCount * FLOOR_H;
   return (
     <Canvas
-      camera={{ position: [CX + 20, buildingTop + 14, CZ + 26], fov: 45 }}
+      camera={{ position: [center[0] + 20, buildingTop + 16, center[1] + 28], fov: 45 }}
       dpr={[1, 2]}
       gl={{ antialias: true }}
     >
       <color attach="background" args={["#dfd9cf"]} />
-      <Scene config={config} projectTitle={projectTitle} />
+      <Scene
+        config={config}
+        projectTitle={projectTitle}
+        texture={scene.texture}
+        depth={scene.depth}
+        center={center}
+      />
     </Canvas>
   );
 }

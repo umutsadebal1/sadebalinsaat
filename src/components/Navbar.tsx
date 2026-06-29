@@ -78,20 +78,17 @@ export default function Navbar() {
         {/* Centered logo */}
         <Link
           href="/"
-          className="group col-start-2 flex items-center gap-2.5 justify-self-center"
+          className="group col-start-2 flex items-center justify-self-center"
           aria-label="Sadebal Yapı anasayfa"
         >
           <Image
-            src="/images/logo.png"
-            alt="Sadebal Yapı logosu"
-            width={44}
-            height={43}
-            className={`transition-all duration-500 ${scrolled ? "h-9 w-auto" : "h-11 w-auto"}`}
+            src="/images/logo-full.png"
+            alt="Sadebal Yapı"
+            width={384}
+            height={122}
+            className={`w-auto transition-all duration-500 ${scrolled ? "h-9" : "h-11"}`}
             priority
           />
-          <span className="hidden font-display text-[15px] tracking-wide text-ink sm:inline">
-            Sadebal <span className="text-gold-700">Yapı</span>
-          </span>
         </Link>
 
         {/* Right links (desktop) + hamburger (mobile) */}

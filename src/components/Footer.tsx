@@ -42,17 +42,14 @@ export default function Footer() {
       <div className="mx-auto max-w-6xl px-5 md:px-8 py-14">
         <div className="grid gap-10 md:grid-cols-[1.3fr_1fr_1fr_1fr]">
           <div>
-            <Link href="/" className="flex items-center gap-2.5 mb-4">
+            <Link href="/" className="mb-4 inline-flex">
               <Image
-                src="/images/logo.png"
-                alt="Sadebal Yapı logosu"
-                width={40}
-                height={39}
-                className="h-10 w-auto"
+                src="/images/logo-full.png"
+                alt="Sadebal Yapı"
+                width={384}
+                height={122}
+                className="h-11 w-auto"
               />
-              <span className="font-display text-base text-ink">
-                Sadebal <span className="text-gold-700">Yapı</span>
-              </span>
             </Link>
             <p className="text-sm leading-relaxed text-ink-soft max-w-xs">
               Konut ve ticari projelerde sağlam mühendislik, zamansız mimari
