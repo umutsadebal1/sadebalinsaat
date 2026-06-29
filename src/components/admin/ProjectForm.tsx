@@ -3,8 +3,14 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
-import { Upload, Trash2, GripVertical, Save, Loader2 } from "lucide-react";
-import type { Project, ProjectStatus, GalleryItem } from "@/lib/projects";
+import { Upload, Trash2, GripVertical, Save, Loader2, Plus } from "lucide-react";
+import type {
+  Project,
+  ProjectStatus,
+  GalleryItem,
+  ConstructionStage,
+  FloorPlan,
+} from "@/lib/projects";
 
 type Props = { initial?: Project };
 
@@ -32,11 +38,17 @@ export default function ProjectForm({ initial }: Props) {
       propertyType: "Konut",
       location: "",
       year: String(new Date().getFullYear()),
+      shortSummary: "",
       description: "",
       longDescription: "",
       image: "",
       isRender: false,
       coordinates: null,
+      mapEmbedUrl: "",
+      area: "",
+      rooms: "",
+      constructionProgress: [],
+      floorPlans: [],
       gallery: [],
     }
   );
@@ -105,6 +117,55 @@ export default function ProjectForm({ initial }: Props) {
     });
   }
 
+  // --- Construction progress (şantiye ilerleme) ---
+  function addStage() {
+    setForm((f) => ({
+      ...f,
+      constructionProgress: [...(f.constructionProgress ?? []), { stage: "", percent: 0 }],
+    }));
+  }
+  function updateStage(i: number, patch: Partial<ConstructionStage>) {
+    setForm((f) => {
+      const list = [...(f.constructionProgress ?? [])];
+      list[i] = { ...list[i], ...patch };
+      return { ...f, constructionProgress: list };
+    });
+  }
+  function removeStage(i: number) {
+    setForm((f) => ({
+      ...f,
+      constructionProgress: (f.constructionProgress ?? []).filter((_, idx) => idx !== i),
+    }));
+  }
+
+  // --- Floor plans (kat planları) ---
+  function addFloorPlan() {
+    setForm((f) => ({
+      ...f,
+      floorPlans: [...(f.floorPlans ?? []), { type: "", imageUrl: "" }],
+    }));
+  }
+  function updateFloorPlan(i: number, patch: Partial<FloorPlan>) {
+    setForm((f) => {
+      const list = [...(f.floorPlans ?? [])];
+      list[i] = { ...list[i], ...patch };
+      return { ...f, floorPlans: list };
+    });
+  }
+  function removeFloorPlan(i: number) {
+    setForm((f) => ({
+      ...f,
+      floorPlans: (f.floorPlans ?? []).filter((_, idx) => idx !== i),
+    }));
+  }
+  async function onFloorPlanUpload(i: number, e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const url = await uploadFile(file);
+    if (url) updateFloorPlan(i, { imageUrl: url });
+    e.target.value = "";
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setSaving(true);
@@ -160,8 +221,14 @@ export default function ProjectForm({ initial }: Props) {
           <Field label="Konum">
             <input value={form.location} onChange={(e) => set("location", e.target.value)} className={inputCls} />
           </Field>
-          <Field label="Yıl">
+          <Field label="Yıl" hint="Tamamlandı = teslim yılı, Devam Eden = hedeflenen teslim">
             <input value={form.year} onChange={(e) => set("year", e.target.value)} className={inputCls} />
+          </Field>
+          <Field label="Toplam Alan" hint="Örn: 8.400 m²">
+            <input value={form.area ?? ""} onChange={(e) => set("area", e.target.value)} className={inputCls} />
+          </Field>
+          <Field label="Oda Tipleri" hint="Örn: 2+1, 3+1">
+            <input value={form.rooms ?? ""} onChange={(e) => set("rooms", e.target.value)} className={inputCls} />
           </Field>
         </div>
         <label className="mt-2 flex items-center gap-2 text-sm text-ink">
@@ -171,6 +238,9 @@ export default function ProjectForm({ initial }: Props) {
       </Section>
 
       <Section title="Açıklamalar">
+        <Field label="Kart Özeti" hint="Tek cümle — portföy kartlarında görünür (boşsa açıklamanın ilk cümlesi kullanılır)">
+          <input value={form.shortSummary ?? ""} onChange={(e) => set("shortSummary", e.target.value)} className={inputCls} />
+        </Field>
         <Field label="Kısa Açıklama" hint="Kart ve listelerde görünür">
           <textarea rows={2} value={form.description} onChange={(e) => set("description", e.target.value)} className={inputCls} />
         </Field>
@@ -250,6 +320,95 @@ export default function ProjectForm({ initial }: Props) {
             />
           </Field>
         </div>
+        <div className="mt-4">
+          <Field label="Harita Embed URL (opsiyonel)" hint="Google Maps 'Yer paylaş > Harita yerleştir' iframe src'si. Doldurulursa lat/lng yerine bu kullanılır.">
+            <input value={form.mapEmbedUrl ?? ""} onChange={(e) => set("mapEmbedUrl", e.target.value)} className={inputCls} />
+          </Field>
+        </div>
+      </Section>
+
+      <Section title="İlerleme Durumu" hint="Aşama bazlı şantiye ilerlemesi — yalnızca 'Devam Eden' projelerde sitede gösterilir">
+        <div className="flex flex-col gap-3">
+          {(form.constructionProgress ?? []).map((s, i) => (
+            <div key={i} className="flex items-center gap-3 rounded-md border border-line bg-bg-card p-2">
+              <input
+                value={s.stage}
+                placeholder="Aşama (örn: Kaba İnşaat)"
+                onChange={(e) => updateStage(i, { stage: e.target.value })}
+                className={`${inputCls} flex-1`}
+              />
+              <div className="flex items-center gap-1.5">
+                <input
+                  type="number"
+                  min={0}
+                  max={100}
+                  value={s.percent}
+                  onChange={(e) =>
+                    updateStage(i, { percent: Math.max(0, Math.min(100, parseInt(e.target.value) || 0)) })
+                  }
+                  className={`${inputCls} w-20`}
+                />
+                <span className="text-sm text-ink-soft">%</span>
+              </div>
+              <button
+                type="button"
+                onClick={() => removeStage(i)}
+                className="rounded p-2 text-ink-soft hover:bg-red-500/10 hover:text-red-500"
+              >
+                <Trash2 className="h-4 w-4" />
+              </button>
+            </div>
+          ))}
+        </div>
+        <button
+          type="button"
+          onClick={addStage}
+          className="mt-3 inline-flex items-center gap-2 rounded-md border border-line px-4 py-2.5 text-sm transition-colors hover:border-gold-600"
+        >
+          <Plus className="h-4 w-4" /> Aşama Ekle
+        </button>
+      </Section>
+
+      <Section title="Kat Planları" hint="Daire tipleri ve plan görselleri — eklenmezse sitede bu bölüm gösterilmez">
+        <div className="flex flex-col gap-3">
+          {(form.floorPlans ?? []).map((fp, i) => (
+            <div key={i} className="flex flex-wrap items-center gap-3 rounded-md border border-line bg-bg-card p-2">
+              <input
+                value={fp.type}
+                placeholder="Tip (örn: 2+1)"
+                onChange={(e) => updateFloorPlan(i, { type: e.target.value })}
+                className={`${inputCls} w-28`}
+              />
+              <div className="relative h-14 w-20 shrink-0 overflow-hidden rounded bg-bg-elevated">
+                {fp.imageUrl && <Image src={fp.imageUrl} alt="" fill className="object-cover" />}
+              </div>
+              <label className="inline-flex cursor-pointer items-center gap-2 rounded-md border border-line px-3 py-2 text-xs transition-colors hover:border-gold-600">
+                <Upload className="h-3.5 w-3.5" /> Görsel Yükle
+                <input type="file" accept="image/*" className="hidden" onChange={(e) => onFloorPlanUpload(i, e)} />
+              </label>
+              <input
+                value={fp.imageUrl}
+                placeholder="veya görsel yolu"
+                onChange={(e) => updateFloorPlan(i, { imageUrl: e.target.value })}
+                className={`${inputCls} min-w-[140px] flex-1`}
+              />
+              <button
+                type="button"
+                onClick={() => removeFloorPlan(i)}
+                className="rounded p-2 text-ink-soft hover:bg-red-500/10 hover:text-red-500"
+              >
+                <Trash2 className="h-4 w-4" />
+              </button>
+            </div>
+          ))}
+        </div>
+        <button
+          type="button"
+          onClick={addFloorPlan}
+          className="mt-3 inline-flex items-center gap-2 rounded-md border border-line px-4 py-2.5 text-sm transition-colors hover:border-gold-600"
+        >
+          <Plus className="h-4 w-4" /> Kat Planı Ekle
+        </button>
       </Section>
 
       {error && <p className="text-sm text-red-500">{error}</p>}

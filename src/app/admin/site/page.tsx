@@ -1,8 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Save, Loader2 } from "lucide-react";
-import type { SiteConfig } from "@/lib/site-config";
+import Image from "next/image";
+import { Save, Loader2, Plus, Trash2, Upload } from "lucide-react";
+import type { SiteConfig, FaqItem, Testimonial } from "@/lib/site-config";
 
 const inputCls =
   "w-full rounded-md border border-line bg-bg px-3 py-2.5 text-sm text-ink outline-none transition-colors focus:border-gold-600";
@@ -23,6 +24,47 @@ export default function SiteSettingsPage() {
   function set<K extends keyof SiteConfig>(key: K, value: SiteConfig[K]) {
     setSite((s) => (s ? { ...s, [key]: value } : s));
     setSaved(false);
+  }
+
+  // --- SSS ---
+  function addFaq() {
+    set("faq", [...(site?.faq ?? []), { question: "", answer: "" }]);
+  }
+  function updateFaq(i: number, patch: Partial<FaqItem>) {
+    const list = [...(site?.faq ?? [])];
+    list[i] = { ...list[i], ...patch };
+    set("faq", list);
+  }
+  function removeFaq(i: number) {
+    set("faq", (site?.faq ?? []).filter((_, idx) => idx !== i));
+  }
+
+  // --- Testimonials ---
+  function addTestimonial() {
+    set("testimonials", [...(site?.testimonials ?? []), { name: "", role: "", quote: "" }]);
+  }
+  function updateTestimonial(i: number, patch: Partial<Testimonial>) {
+    const list = [...(site?.testimonials ?? [])];
+    list[i] = { ...list[i], ...patch };
+    set("testimonials", list);
+  }
+  function removeTestimonial(i: number) {
+    set("testimonials", (site?.testimonials ?? []).filter((_, idx) => idx !== i));
+  }
+  async function onTestimonialPhoto(i: number, e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const fd = new FormData();
+    fd.append("file", file);
+    fd.append("folder", "testimonials");
+    const res = await fetch("/api/admin/upload", { method: "POST", body: fd });
+    if (res.ok) {
+      const { url } = await res.json();
+      updateTestimonial(i, { photo: url });
+    } else {
+      alert("Görsel yüklenemedi.");
+    }
+    e.target.value = "";
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -96,6 +138,105 @@ export default function SiteSettingsPage() {
               <input value={site.social.linkedin} onChange={(e) => set("social", { ...site.social, linkedin: e.target.value })} className={inputCls} />
             </Field>
           </div>
+        </Section>
+
+        <Section title="Sıkça Sorulan Sorular (SSS)">
+          <div className="flex flex-col gap-4">
+            {(site.faq ?? []).map((f, i) => (
+              <div key={i} className="rounded-md border border-line bg-bg p-3">
+                <div className="mb-2 flex items-center justify-between">
+                  <span className="font-mono-label text-[11px] uppercase tracking-[0.08em] text-ink-soft">
+                    Soru {i + 1}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => removeFaq(i)}
+                    className="rounded p-1.5 text-ink-soft hover:bg-red-500/10 hover:text-red-500"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </button>
+                </div>
+                <input
+                  value={f.question}
+                  placeholder="Soru"
+                  onChange={(e) => updateFaq(i, { question: e.target.value })}
+                  className={`${inputCls} mb-2`}
+                />
+                <textarea
+                  rows={3}
+                  value={f.answer}
+                  placeholder="Cevap"
+                  onChange={(e) => updateFaq(i, { answer: e.target.value })}
+                  className={inputCls}
+                />
+              </div>
+            ))}
+          </div>
+          <button
+            type="button"
+            onClick={addFaq}
+            className="mt-3 inline-flex items-center gap-2 rounded-md border border-line px-4 py-2.5 text-sm transition-colors hover:border-gold-600"
+          >
+            <Plus className="h-4 w-4" /> Soru Ekle
+          </button>
+        </Section>
+
+        <Section title="Referanslar (Yorumlar)">
+          <div className="flex flex-col gap-4">
+            {(site.testimonials ?? []).map((t, i) => (
+              <div key={i} className="rounded-md border border-line bg-bg p-3">
+                <div className="mb-2 flex items-center justify-between">
+                  <span className="font-mono-label text-[11px] uppercase tracking-[0.08em] text-ink-soft">
+                    Yorum {i + 1}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => removeTestimonial(i)}
+                    className="rounded p-1.5 text-ink-soft hover:bg-red-500/10 hover:text-red-500"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </button>
+                </div>
+                <div className="mb-2 grid gap-2 sm:grid-cols-2">
+                  <input
+                    value={t.name}
+                    placeholder="İsim"
+                    onChange={(e) => updateTestimonial(i, { name: e.target.value })}
+                    className={inputCls}
+                  />
+                  <input
+                    value={t.role ?? ""}
+                    placeholder="Ünvan / Proje (opsiyonel)"
+                    onChange={(e) => updateTestimonial(i, { role: e.target.value })}
+                    className={inputCls}
+                  />
+                </div>
+                <textarea
+                  rows={2}
+                  value={t.quote}
+                  placeholder="Yorum metni"
+                  onChange={(e) => updateTestimonial(i, { quote: e.target.value })}
+                  className={`${inputCls} mb-2`}
+                />
+                <div className="flex items-center gap-3">
+                  <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-full border border-line bg-bg-elevated">
+                    {t.photo && <Image src={t.photo} alt="" fill className="object-cover" />}
+                  </div>
+                  <label className="inline-flex cursor-pointer items-center gap-2 rounded-md border border-line px-3 py-2 text-xs transition-colors hover:border-gold-600">
+                    <Upload className="h-3.5 w-3.5" /> Fotoğraf (opsiyonel)
+                    <input type="file" accept="image/*" className="hidden" onChange={(e) => onTestimonialPhoto(i, e)} />
+                  </label>
+                </div>
+              </div>
+            ))}
+          </div>
+          <button
+            type="button"
+            onClick={addTestimonial}
+            className="mt-3 inline-flex items-center gap-2 rounded-md border border-line px-4 py-2.5 text-sm transition-colors hover:border-gold-600"
+          >
+            <Plus className="h-4 w-4" /> Yorum Ekle
+          </button>
         </Section>
 
         <div className="flex items-center gap-3">
