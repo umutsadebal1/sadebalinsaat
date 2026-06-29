@@ -51,8 +51,10 @@ export default async function Tour3DPage({
         <Info className="mt-0.5 h-4 w-4 shrink-0 text-gold-600" strokeWidth={1.8} />
         <p className="text-sm text-ink-soft">
           Bu, projenin <strong className="text-ink">temsili</strong> 3D görünümüdür;
-          gerçek mimari detaylar yansıtılmamıştır. Mimari model tamamlandığında
-          güncellenecektir.
+          gerçek mimari detaylar henüz yansıtılmamıştır. Buradaki{" "}
+          <strong className="text-ink">daireler, m² ve durum bilgileri temsilidir</strong>{" "}
+          ve gerçek verilerle güncellenecektir. Mimari model tamamlandığında tüm
+          sistem güncellenecektir.
         </p>
       </div>
 
