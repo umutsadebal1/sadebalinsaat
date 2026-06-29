@@ -7,12 +7,14 @@ import Reveal from "@/components/Reveal";
 import ValueGrid from "@/components/ValueGrid";
 import AnimatedHeading from "@/components/AnimatedHeading";
 import MagneticButton from "@/components/MagneticButton";
-import { readProjects } from "@/lib/data";
+import Testimonials from "@/components/Testimonials";
+import { readProjects, readSite } from "@/lib/data";
 
 export const dynamic = "force-dynamic";
 
 export default function Home() {
   const projects = readProjects();
+  const siteConfig = readSite();
   return (
     <>
       <Hero />
@@ -139,6 +141,16 @@ export default function Home() {
           <ValueGrid />
         </div>
       </section>
+
+      {/* TESTIMONIALS */}
+      {siteConfig.testimonials && siteConfig.testimonials.length > 0 && (
+        <section className="mx-auto max-w-6xl px-5 md:px-8 py-24 md:py-32">
+          <Reveal>
+            <FrameReveal label="Referanslar" className="mb-14" />
+          </Reveal>
+          <Testimonials items={siteConfig.testimonials} />
+        </section>
+      )}
 
       {/* CTA */}
       <section className="relative overflow-hidden bg-petrol-900">

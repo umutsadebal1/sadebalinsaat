@@ -3,6 +3,8 @@ import { Phone, Mail, MapPin, Clock } from "lucide-react";
 import FrameReveal from "@/components/FrameReveal";
 import ContactForm from "@/components/ContactForm";
 import AnimatedHeading from "@/components/AnimatedHeading";
+import FAQ from "@/components/FAQ";
+import Reveal from "@/components/Reveal";
 import { readSite } from "@/lib/data";
 
 export const dynamic = "force-dynamic";
@@ -57,6 +59,20 @@ export default function ContactPage() {
           <ContactForm />
         </div>
       </div>
+
+      {siteConfig.faq && siteConfig.faq.length > 0 && (
+        <div className="mt-24 md:mt-32">
+          <Reveal>
+            <FrameReveal label="Sıkça Sorulan Sorular" className="mb-8" />
+          </Reveal>
+          <AnimatedHeading
+            text="Aklınızdaki sorulara yanıtlar"
+            as="h2"
+            className="font-display text-3xl md:text-4xl text-ink mb-10 max-w-xl text-balance"
+          />
+          <FAQ items={siteConfig.faq} />
+        </div>
+      )}
     </div>
   );
 }
