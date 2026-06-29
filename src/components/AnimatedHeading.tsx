@@ -41,7 +41,7 @@ export default function AnimatedHeading({
     >
       {text.split(" ").map((w, i) => (
         <span key={i} className="inline-block overflow-hidden align-bottom">
-          <motion.span variants={word} className="inline-block">
+          <motion.span variants={word} className="inline-block whitespace-pre">
             {w}
             {i < text.split(" ").length - 1 ? " " : ""}
           </motion.span>

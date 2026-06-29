@@ -14,5 +14,44 @@
     "instagram": "#",
     "facebook": "#",
     "linkedin": "#"
-  }
+  },
+  "faq": [
+    {
+      "question": "Projeleriniz depreme dayanıklılık testinden geçiyor mu?",
+      "answer": "Tüm projelerimiz güncel deprem yönetmeliğine (TBDY 2018) uygun olarak projelendirilir ve gerekli statik hesaplar, zemin etütleri ile denetim süreçlerinden geçer. Radye temel sistemleri ve yüksek dayanımlı malzeme seçimleriyle uzun ömürlü, güvenli yapılar inşa ediyoruz."
+    },
+    {
+      "question": "Kullandığınız beton ve demir sınıfları nelerdir?",
+      "answer": "Projelerimizde standart olarak C30/C35 sınıfı hazır beton ve B500C nervürlü inşaat demiri kullanıyoruz. Malzeme sınıfları, her projenin statik gereksinimlerine göre ilgili yönetmelikler doğrultusunda belirlenir."
+    },
+    {
+      "question": "Ödeme planları nasıl oluyor?",
+      "answer": "Peşin ödeme, banka kredisi ve projeye özel taksit seçenekleri sunuyoruz. Devam eden projelerde inşaat aşamasına yayılan esnek ödeme planları oluşturulabilir. Detaylar için bizimle iletişime geçebilirsiniz."
+    },
+    {
+      "question": "Teslim süreleri ortalama ne kadar sürüyor?",
+      "answer": "Teslim süresi projenin ölçeğine göre değişmekle birlikte, konut projelerimizde ortalama 18–30 ay arasındadır. Sözleşmede belirtilen teslim tarihine sadık kalmak en temel önceliklerimizdendir."
+    },
+    {
+      "question": "Proje sürecinde ilerlemeyi takip edebilir miyim?",
+      "answer": "Evet. Devam eden projelerimizde, web sitemizdeki proje detay sayfasında aşama bazlı ilerleme durumunu yayınlıyoruz. Ayrıca düzenli olarak şantiyeden bilgilendirme ve görsel paylaşımı yapıyoruz."
+    }
+  ],
+  "testimonials": [
+    {
+      "name": "Loca Life Sakini",
+      "role": "Konut Sahibi",
+      "quote": "Söz verilen takvime sadık kaldılar ve teslim sürecinde her aşamada bilgilendirildik. İşçilik kalitesi beklentimizin üzerindeydi."
+    },
+    {
+      "name": "Ticari Ünite Sahibi",
+      "role": "Yatırımcı",
+      "quote": "Sadebal Yapı ile çalışmak güven vericiydi. Şeffaf süreç ve net iletişim sayesinde yatırımımı gönül rahatlığıyla yaptım."
+    },
+    {
+      "name": "Zirve House Sakini",
+      "role": "Konut Sahibi",
+      "quote": "Detaylara verilen önem her köşede hissediliyor. Malzeme kalitesi ve mimari estetik gerçekten fark yaratıyor."
+    }
+  ]
 }

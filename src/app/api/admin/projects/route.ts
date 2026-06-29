@@ -36,11 +36,17 @@ export async function POST(req: NextRequest) {
     propertyType: body.propertyType ?? "Konut",
     location: body.location ?? "",
     year: body.year ?? String(new Date().getFullYear()),
+    shortSummary: body.shortSummary ?? "",
     description: body.description ?? "",
     longDescription: body.longDescription ?? "",
     image: body.image ?? "",
     isRender: !!body.isRender,
     coordinates: body.coordinates ?? null,
+    mapEmbedUrl: body.mapEmbedUrl ?? "",
+    area: body.area ?? "",
+    rooms: body.rooms ?? "",
+    constructionProgress: body.constructionProgress ?? [],
+    floorPlans: body.floorPlans ?? [],
     gallery: body.gallery ?? [],
   };
   projects.push(project);

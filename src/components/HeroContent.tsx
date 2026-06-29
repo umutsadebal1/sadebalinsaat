@@ -49,7 +49,7 @@ export default function HeroContent({
           variants={item}
           className="font-display text-4xl sm:text-5xl md:text-6xl lg:text-7xl text-[#F7F4ED] max-w-3xl leading-[1.05] text-balance"
         >
-          Sadelikte güç,<br />
+          Sadelikte güç,{" "}<br />
           <span className="italic text-gold-400">kalitede</span> iz bırakan yapılar.
         </motion.h1>
         <motion.p
