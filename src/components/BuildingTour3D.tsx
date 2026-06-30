@@ -5,6 +5,7 @@ import { Canvas } from "@react-three/fiber";
 import { OrbitControls, Line, Html } from "@react-three/drei";
 import * as THREE from "three";
 import type { Tour3DConfig } from "@/lib/projects";
+import { useT } from "./LocaleProvider";
 
 /**
  * Approximate land-boundary as proportional (0–1) points in the satellite
@@ -32,10 +33,10 @@ const FOOT_D = 5.0; // building footprint depth (z)
 
 /** Availability status — göstermelik (demo). Renkler gerçek doluluk değil. */
 type UnitStatus = "available" | "reserved" | "sold";
-const STATUS: Record<UnitStatus, { color: string; label: string }> = {
-  available: { color: "#22c55e", label: "Müsait" }, // yeşil
-  reserved: { color: "#eab308", label: "Rezerve" }, // sarı
-  sold: { color: "#ef4444", label: "Satıldı" }, // kırmızı
+const STATUS: Record<UnitStatus, { color: string; labelKey: string }> = {
+  available: { color: "#22c55e", labelKey: "tour.available" }, // yeşil
+  reserved: { color: "#eab308", labelKey: "tour.reserved" }, // sarı
+  sold: { color: "#ef4444", labelKey: "tour.sold" }, // kırmızı
 };
 
 /**
@@ -115,6 +116,7 @@ function Building({
   center: [number, number];
 }) {
   const { floorCount, unitsPerFloor } = config;
+  const t = useT();
   const [hover, setHover] = useState<{ f: number; u: number } | null>(null);
   const [sel, setSel] = useState<{ f: number; u: number } | null>(null);
 
@@ -198,7 +200,7 @@ function Building({
             >
               <div className="w-52 rounded-lg border border-line bg-bg-card p-4 text-ink shadow-xl">
                 <p className="font-mono-label text-[10px] uppercase tracking-[0.12em] text-gold-700">
-                  Kat {sel.f + 1} · Daire {sel.u + 1}
+                  {t("tour.floor")} {sel.f + 1} · {t("tour.unit")} {sel.u + 1}
                 </p>
                 <p className="mt-1 font-display text-lg">~{m2} m²</p>
                 <p className="mt-1 flex items-center gap-1.5 text-xs text-ink-soft">
@@ -206,7 +208,8 @@ function Building({
                     className="inline-block h-2.5 w-2.5 rounded-full"
                     style={{ backgroundColor: info.color }}
                   />
-                  Durum: <span className="font-medium text-ink">{info.label}</span>
+                  {t("tour.statusLabel")}:{" "}
+                  <span className="font-medium text-ink">{t(info.labelKey)}</span>
                 </p>
                 {st !== "sold" && (
                   <a
@@ -215,7 +218,7 @@ function Building({
                     rel="noopener noreferrer"
                     className="mt-3 flex items-center justify-center gap-2 rounded-md bg-[#25D366] px-3 py-2 text-xs font-medium text-white transition-colors hover:bg-[#1ebe5b]"
                   >
-                    WhatsApp ile Bilgi Al
+                    {t("tour.whatsapp")}
                   </a>
                 )}
               </div>
