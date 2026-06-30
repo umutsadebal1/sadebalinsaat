@@ -6,12 +6,14 @@ import { X, ChevronLeft, ChevronRight } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import type { GalleryItem } from "@/lib/projects";
 import Reveal from "./Reveal";
+import { useT } from "./LocaleProvider";
 
 /**
  * Full-width, stacked image flow — each image gets its own breathing room so
  * the visitor "walks through" the project by scrolling. Click opens a lightbox.
  */
 export default function ProjectImageFlow({ images }: { images: GalleryItem[] }) {
+  const t = useT();
   const [lightbox, setLightbox] = useState<number | null>(null);
 
   if (images.length === 0) return null;
@@ -42,7 +44,7 @@ export default function ProjectImageFlow({ images }: { images: GalleryItem[] }) 
                 />
                 {img.isRender && (
                   <div className="absolute left-4 top-4 rounded-full bg-petrol-900/80 px-3 py-1 font-mono-label text-[9px] uppercase tracking-[0.08em] text-gold-200 backdrop-blur-sm">
-                    3D Görselleştirme
+                    {t("common.render3d")}
                   </div>
                 )}
               </div>

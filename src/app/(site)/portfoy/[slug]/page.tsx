@@ -21,8 +21,9 @@ import Reveal from "@/components/Reveal";
 import AnimatedHeading from "@/components/AnimatedHeading";
 import MagneticButton from "@/components/MagneticButton";
 import { SetWhatsAppProject } from "@/components/WhatsAppContext";
-import { findProject, deliveryLabel } from "@/lib/projects";
+import { findProject, deliveryLabel, statusKey } from "@/lib/projects";
 import { readProjects } from "@/lib/data";
+import { getT } from "@/lib/locale-server";
 
 export const dynamic = "force-dynamic";
 
@@ -56,6 +57,7 @@ export default async function ProjectDetailPage({
   const { slug } = await params;
   const project = findProject(readProjects(), slug);
   if (!project) notFound();
+  const { t } = await getT();
 
   const sliderImages = [
     { src: project.image, caption: project.title, isRender: project.isRender },
@@ -67,7 +69,7 @@ export default async function ProjectDetailPage({
     project.area && { icon: Maximize2, value: project.area },
     project.rooms && { icon: LayoutGrid, value: project.rooms },
     { icon: MapPin, value: project.location },
-    { icon: Calendar, value: `${delivery.label}: ${delivery.value}` },
+    { icon: Calendar, value: `${t(delivery.key)}: ${delivery.value}` },
     { icon: Building, value: project.propertyType },
   ].filter(Boolean) as { icon: typeof MapPin; value: string }[];
 
@@ -80,7 +82,7 @@ export default async function ProjectDetailPage({
       <ProjectHeroSlider
         images={sliderImages}
         title={project.title}
-        status={project.status}
+        status={t(statusKey(project.status))}
       />
 
       <div className="mx-auto max-w-6xl px-5 md:px-8 py-16 md:py-24">
@@ -89,13 +91,13 @@ export default async function ProjectDetailPage({
           className="group mb-10 inline-flex items-center gap-1.5 font-mono-label text-[12px] uppercase tracking-[0.12em] text-ink-soft transition-colors hover:text-gold-700"
         >
           <ArrowLeft className="h-3.5 w-3.5 transition-transform duration-300 group-hover:-translate-x-1" />
-          Tüm Projeler
+          {t("portfolio.allProjects")}
         </Link>
 
         {/* B) Info block */}
         <div className="mb-5 flex flex-wrap items-center gap-3">
           <span className="rounded-full bg-petrol-700 px-3.5 py-1.5 font-mono-label text-[11px] uppercase tracking-[0.1em] text-gold-200">
-            {project.status}
+            {t(statusKey(project.status))}
           </span>
           <span className="rounded-full border border-line px-3.5 py-1.5 font-mono-label text-[11px] uppercase tracking-[0.1em] text-ink-soft">
             {project.propertyType}
@@ -141,7 +143,7 @@ export default async function ProjectDetailPage({
         {/* D) Construction progress — ongoing projects only */}
         {isOngoing && (project.constructionProgress?.length ?? 0) > 0 && (
           <Reveal className="mb-16">
-            <FrameReveal label="Şantiyeden Kareler" className="mb-8" />
+            <FrameReveal label={t("detail.constructionTitle")} className="mb-8" />
             <ConstructionProgress stages={project.constructionProgress!} />
           </Reveal>
         )}
@@ -149,7 +151,7 @@ export default async function ProjectDetailPage({
         {/* Floor plans (interactive) */}
         {(project.floorPlans?.length ?? 0) > 0 && (
           <Reveal className="mb-16">
-            <FrameReveal label="Kat Planları" className="mb-8" />
+            <FrameReveal label={t("detail.floorPlans")} className="mb-8" />
             <FloorPlans plans={project.floorPlans!} />
           </Reveal>
         )}
@@ -158,7 +160,7 @@ export default async function ProjectDetailPage({
         {(project.gallery?.length ?? 0) > 0 && (
           <div className="mb-20">
             <Reveal>
-              <FrameReveal label="Proje Galerisi" className="mb-10" />
+              <FrameReveal label={t("detail.gallery")} className="mb-10" />
             </Reveal>
             <ProjectImageFlow images={project.gallery!} />
           </div>
@@ -166,7 +168,7 @@ export default async function ProjectDetailPage({
 
         {/* E) Map */}
         <Reveal>
-          <FrameReveal label="Konum" className="mb-8" />
+          <FrameReveal label={t("detail.location")} className="mb-8" />
           <ProjectMap
             coordinates={project.coordinates}
             embedUrl={project.mapEmbedUrl}
@@ -179,7 +181,7 @@ export default async function ProjectDetailPage({
       <section className="border-t border-line bg-petrol-900">
         <div className="mx-auto max-w-6xl px-5 md:px-8 py-20 md:py-28 text-center">
           <AnimatedHeading
-            text="Bu projeyi yakından tanımak ister misiniz?"
+            text={t("detail.ctaHeading")}
             className="mx-auto mb-10 max-w-2xl font-display text-3xl text-[#F7F4ED] text-balance md:text-4xl"
           />
           <div className="flex flex-wrap items-center justify-center gap-4">
@@ -189,21 +191,21 @@ export default async function ProjectDetailPage({
                 className="group inline-flex items-center gap-2 rounded-full bg-gold-600 px-7 py-3.5 text-sm font-medium text-petrol-900 transition-all duration-300 hover:bg-gold-400"
               >
                 <Box className="h-4 w-4" strokeWidth={2} />
-                3D Bina Turunu Başlat
+                {t("detail.start3d")}
               </Link>
             )}
             <MagneticButton
               href="/iletisim"
               className="group inline-flex items-center gap-2 rounded-full border border-[#F7F4ED]/30 px-7 py-3.5 text-sm font-medium text-[#F7F4ED] transition-all duration-300 hover:border-[#F7F4ED]/70"
             >
-              Bize Ulaşın
+              {t("detail.contactUs")}
               <ArrowRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-1" />
             </MagneticButton>
             <Link
               href="/portfoy"
               className="inline-flex items-center gap-2 rounded-full border border-[#F7F4ED]/30 px-7 py-3.5 text-sm font-medium text-[#F7F4ED] transition-all duration-300 hover:border-[#F7F4ED]/70"
             >
-              Diğer Projeler
+              {t("detail.otherProjects")}
             </Link>
           </div>
         </div>

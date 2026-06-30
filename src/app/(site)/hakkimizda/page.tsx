@@ -4,6 +4,7 @@ import FrameReveal from "@/components/FrameReveal";
 import Reveal from "@/components/Reveal";
 import AnimatedHeading from "@/components/AnimatedHeading";
 import { readSite } from "@/lib/data";
+import { getT } from "@/lib/locale-server";
 
 export const dynamic = "force-dynamic";
 
@@ -17,29 +18,30 @@ export const metadata: Metadata = {
 const PILLARS = [
   {
     icon: Target,
-    title: "Misyonumuz",
+    titleKey: "about.mission",
     text: "Her bütçeye ve her ihtiyaca uygun, sağlam mühendislikle inşa edilmiş yaşam ve çalışma alanları üretmek.",
   },
   {
     icon: Eye,
-    title: "Vizyonumuz",
+    titleKey: "about.vision",
     text: "Bölgemizde adıyla güven duyulan, kalitesiyle anılan bir yapı markası olmak.",
   },
   {
     icon: HeartHandshake,
-    title: "Değerlerimiz",
+    titleKey: "about.values",
     text: "Şeffaflık, zamanında teslim ve detayda özen — her projede taviz vermediğimiz üç ilke.",
   },
 ];
 
-export default function AboutPage() {
+export default async function AboutPage() {
   const siteConfig = readSite();
+  const { t } = await getT();
   return (
     <div>
       <section className="mx-auto max-w-6xl px-5 md:px-8 py-20 md:py-28">
-        <FrameReveal label="Hakkımızda" className="mb-10" />
+        <FrameReveal label={t("nav.about")} className="mb-10" />
         <AnimatedHeading
-          text="Sadelikte güç, kalitede iz bırakan bir anlayış"
+          text={t("about.heading")}
           as="h1"
           className="font-display text-4xl md:text-5xl text-ink max-w-2xl mb-6 text-balance"
         />
@@ -56,10 +58,10 @@ export default function AboutPage() {
         <div className="mx-auto max-w-6xl px-5 md:px-8 py-20 md:py-28">
           <div className="grid gap-10 md:grid-cols-3">
             {PILLARS.map((p, i) => (
-              <Reveal key={p.title} delay={i * 120}>
+              <Reveal key={p.titleKey} delay={i * 120}>
                 <div className="frame-corner">
                   <p.icon className="h-6 w-6 text-gold-600 mb-4" strokeWidth={1.5} />
-                  <h2 className="font-display text-xl text-ink mb-2">{p.title}</h2>
+                  <h2 className="font-display text-xl text-ink mb-2">{t(p.titleKey)}</h2>
                   <p className="text-sm text-ink-soft leading-relaxed">{p.text}</p>
                 </div>
               </Reveal>
@@ -70,7 +72,7 @@ export default function AboutPage() {
 
       <section className="mx-auto max-w-6xl px-5 md:px-8 py-20 md:py-28">
         <Reveal>
-          <FrameReveal label="Yaklaşımımız" className="mb-10" />
+          <FrameReveal label={t("about.approachLabel")} className="mb-10" />
         </Reveal>
         <div className="grid gap-12 md:grid-cols-2">
           <Reveal delay={100}>
@@ -104,7 +106,7 @@ export default function AboutPage() {
       <section className="bg-bg-elevated border-y border-line">
         <div className="mx-auto max-w-6xl px-5 md:px-8 py-20 md:py-28">
           <Reveal>
-            <FrameReveal label="Kurucumuz" className="mb-10" />
+            <FrameReveal label={t("about.founderLabel")} className="mb-10" />
           </Reveal>
           <Reveal delay={100}>
             <div className="flex flex-col sm:flex-row sm:items-center gap-6">

@@ -3,12 +3,14 @@
 import { motion } from "framer-motion";
 import { Activity } from "lucide-react";
 import type { ConstructionStage } from "@/lib/projects";
+import { useT } from "./LocaleProvider";
 
 export default function ConstructionProgress({
   stages,
 }: {
   stages: ConstructionStage[];
 }) {
+  const t = useT();
   if (!stages || stages.length === 0) return null;
 
   return (
@@ -19,7 +21,7 @@ export default function ConstructionProgress({
           <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-gold-600" />
         </span>
         <p className="font-mono-label text-[11px] uppercase tracking-[0.15em] text-gold-700">
-          Canlı Şantiye Durumu
+          {t("construction.live")}
         </p>
       </div>
 

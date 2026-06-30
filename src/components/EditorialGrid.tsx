@@ -6,9 +6,15 @@ import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
 import { motion, AnimatePresence, LayoutGroup } from "framer-motion";
 import type { Project, ProjectStatus } from "@/lib/projects";
-import { deliveryLabel, projectSummary } from "@/lib/projects";
+import { deliveryLabel, projectSummary, statusKey } from "@/lib/projects";
+import { useT } from "./LocaleProvider";
 
-const FILTERS: Array<ProjectStatus | "Tümü"> = ["Tümü", "Devam Eden", "Tamamlandı"];
+type FilterValue = "all" | ProjectStatus;
+const FILTERS: { value: FilterValue; key: string }[] = [
+  { value: "all", key: "filter.all" },
+  { value: "Devam Eden", key: "status.ongoing" },
+  { value: "Tamamlandı", key: "status.completed" },
+];
 
 // Repeating asymmetric layout. Each entry: large col-spans on lg (6-col grid)
 // plus an aspect ratio so the editorial rhythm varies. Pattern fills cleanly
@@ -21,9 +27,10 @@ const PATTERN = [
 ];
 
 export default function EditorialGrid({ projects }: { projects: Project[] }) {
-  const [active, setActive] = useState<(typeof FILTERS)[number]>("Tümü");
+  const t = useT();
+  const [active, setActive] = useState<FilterValue>("all");
   const filtered =
-    active === "Tümü" ? projects : projects.filter((p) => p.status === active);
+    active === "all" ? projects : projects.filter((p) => p.status === active);
 
   return (
     <div>
@@ -31,23 +38,23 @@ export default function EditorialGrid({ projects }: { projects: Project[] }) {
         <div className="mb-10 flex flex-wrap items-center gap-2">
           {FILTERS.map((f) => (
             <button
-              key={f}
-              onClick={() => setActive(f)}
-              aria-pressed={active === f}
+              key={f.value}
+              onClick={() => setActive(f.value)}
+              aria-pressed={active === f.value}
               className={`relative cursor-pointer rounded-full border px-4 py-2 font-mono-label text-[11px] uppercase tracking-[0.1em] transition-colors duration-300 ${
-                active === f
+                active === f.value
                   ? "border-gold-600 text-petrol-900"
                   : "border-line text-ink-soft hover:border-gold-600 hover:text-ink"
               }`}
             >
-              {active === f && (
+              {active === f.value && (
                 <motion.span
                   layoutId="editorial-filter-pill"
                   className="absolute inset-0 rounded-full bg-gold-600"
                   transition={{ type: "spring", stiffness: 380, damping: 32 }}
                 />
               )}
-              <span className="relative z-10">{f}</span>
+              <span className="relative z-10">{t(f.key)}</span>
             </button>
           ))}
         </div>
@@ -82,11 +89,11 @@ export default function EditorialGrid({ projects }: { projects: Project[] }) {
                         />
                         <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-petrol-900/80 via-petrol-900/10 to-transparent" />
                         <div className="absolute left-3 top-3 rounded-full bg-petrol-900/80 px-3 py-1 font-mono-label text-[10px] uppercase tracking-[0.1em] text-gold-200 backdrop-blur-sm">
-                          {p.status}
+                          {t(statusKey(p.status))}
                         </div>
                         {p.isRender && (
                           <div className="absolute right-3 top-3 rounded-full bg-bg-card/90 px-2.5 py-1 font-mono-label text-[9px] uppercase tracking-[0.08em] text-ink-soft backdrop-blur-sm">
-                            3D Görselleştirme
+                            {t("common.render3d")}
                           </div>
                         )}
 
@@ -110,7 +117,7 @@ export default function EditorialGrid({ projects }: { projects: Project[] }) {
                           {projectSummary(p)}
                         </p>
                         <p className="font-mono-label text-[11px] uppercase tracking-[0.08em] text-gold-700">
-                          {p.location} · {delivery.label}: {delivery.value}
+                          {p.location} · {t(delivery.key)}: {delivery.value}
                         </p>
                       </div>
                     </Link>
@@ -120,7 +127,7 @@ export default function EditorialGrid({ projects }: { projects: Project[] }) {
             </AnimatePresence>
           </div>
         ) : (
-          <p className="py-16 text-center text-ink-soft">Bu kategoride henüz proje yok.</p>
+          <p className="py-16 text-center text-ink-soft">{t("portfolio.empty")}</p>
         )}
       </LayoutGroup>
     </div>

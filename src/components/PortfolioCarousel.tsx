@@ -6,11 +6,13 @@ import Link from "next/link";
 import { ArrowRight, ChevronLeft, ChevronRight } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import type { Project } from "@/lib/projects";
-import { deliveryLabel } from "@/lib/projects";
+import { deliveryLabel, statusKey } from "@/lib/projects";
+import { useT } from "./LocaleProvider";
 
 const AUTO_MS = 5500;
 
 export default function PortfolioCarousel({ projects }: { projects: Project[] }) {
+  const t = useT();
   const [index, setIndex] = useState(0);
   const [dir, setDir] = useState(1);
   const count = projects.length;
@@ -92,10 +94,10 @@ export default function PortfolioCarousel({ projects }: { projects: Project[] })
             >
               <div className="mb-4 flex flex-wrap items-center gap-3">
                 <span className="rounded-full bg-gold-600 px-3.5 py-1.5 font-mono-label text-[11px] uppercase tracking-[0.1em] text-petrol-900">
-                  {project.status}
+                  {t(statusKey(project.status))}
                 </span>
                 <span className="font-mono-label text-[11px] uppercase tracking-[0.12em] text-gold-200">
-                  {project.location} · {delivery.label}: {delivery.value}
+                  {project.location} · {t(delivery.key)}: {delivery.value}
                 </span>
               </div>
               <h2 className="font-display text-3xl text-[#F7F4ED] text-balance sm:text-4xl md:text-5xl">
@@ -105,7 +107,7 @@ export default function PortfolioCarousel({ projects }: { projects: Project[] })
                 href={`/portfoy/${project.slug}`}
                 className="group mt-6 inline-flex items-center gap-2 rounded-full bg-[#F7F4ED]/10 px-6 py-3 text-sm font-medium text-[#F7F4ED] backdrop-blur-sm transition-all duration-300 hover:bg-gold-600 hover:text-petrol-900"
               >
-                Projeyi Gör
+                {t("portfolio.viewProject")}
                 <ArrowRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-1" />
               </Link>
             </motion.div>

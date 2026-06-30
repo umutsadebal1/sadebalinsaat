@@ -2,8 +2,10 @@
 
 import { useState } from "react";
 import { Send } from "lucide-react";
+import { useT } from "./LocaleProvider";
 
 export default function ContactForm() {
+  const t = useT();
   const [status, setStatus] = useState<"idle" | "sending" | "sent" | "error">("idle");
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
@@ -38,10 +40,8 @@ export default function ContactForm() {
   if (status === "sent") {
     return (
       <div className="rounded-sm border border-gold-600/40 bg-gold-200/20 p-6">
-        <p className="font-display text-lg text-ink mb-1">Mesajınız alındı.</p>
-        <p className="text-sm text-ink-soft">
-          En kısa sürede sizinle iletişime geçeceğiz.
-        </p>
+        <p className="font-display text-lg text-ink mb-1">{t("form.sentTitle")}</p>
+        <p className="text-sm text-ink-soft">{t("form.sentBody")}</p>
       </div>
     );
   }
@@ -49,17 +49,17 @@ export default function ContactForm() {
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-5">
       <div className="grid gap-5 sm:grid-cols-2">
-        <Field label="Ad Soyad" name="name" required />
-        <Field label="Telefon" name="phone" type="tel" required />
+        <Field label={t("form.name")} name="name" required />
+        <Field label={t("form.phone")} name="phone" type="tel" required />
       </div>
-      <Field label="E-posta" name="email" type="email" required />
-      <Field label="Konu" name="subject" />
+      <Field label={t("form.email")} name="email" type="email" required />
+      <Field label={t("form.subject")} name="subject" />
       <div>
         <label
           htmlFor="message"
           className="block font-mono-label text-[11px] uppercase tracking-[0.1em] text-ink-soft mb-2"
         >
-          Mesajınız
+          {t("form.message")}
         </label>
         <textarea
           id="message"
@@ -74,14 +74,10 @@ export default function ContactForm() {
         disabled={status === "sending"}
         className="group inline-flex w-fit items-center gap-2 rounded-full bg-gold-600 px-6 py-3 text-sm font-medium text-petrol-900 transition-all duration-300 hover:bg-gold-400 disabled:opacity-60"
       >
-        {status === "sending" ? "Gönderiliyor..." : "Mesajı Gönder"}
+        {status === "sending" ? t("form.sending") : t("form.send")}
         <Send className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-1" />
       </button>
-      {status === "error" && (
-        <p className="text-sm text-red-500">
-          Mesaj gönderilemedi. Lütfen tekrar deneyin veya bizi arayın.
-        </p>
-      )}
+      {status === "error" && <p className="text-sm text-red-500">{t("form.error")}</p>}
     </form>
   );
 }

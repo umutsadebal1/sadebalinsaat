@@ -4,8 +4,10 @@ import { useState } from "react";
 import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
 import type { FloorPlan } from "@/lib/projects";
+import { useT } from "./LocaleProvider";
 
 export default function FloorPlans({ plans }: { plans: FloorPlan[] }) {
+  const t = useT();
   const [active, setActive] = useState(0);
   if (!plans || plans.length === 0) return null;
   const current = plans[Math.min(active, plans.length - 1)];
@@ -50,7 +52,7 @@ export default function FloorPlans({ plans }: { plans: FloorPlan[] }) {
         </AnimatePresence>
       </div>
       <p className="mt-3 text-center font-mono-label text-[11px] uppercase tracking-[0.1em] text-ink-soft">
-        {current.type} Daire Tipi
+        {current.type} {t("floorplan.unitTypeSuffix")}
       </p>
     </div>
   );

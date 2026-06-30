@@ -5,6 +5,7 @@ import EditorialGrid from "@/components/EditorialGrid";
 import AnimatedHeading from "@/components/AnimatedHeading";
 import Reveal from "@/components/Reveal";
 import { readProjects } from "@/lib/data";
+import { getT } from "@/lib/locale-server";
 
 export const dynamic = "force-dynamic";
 
@@ -15,19 +16,19 @@ export const metadata: Metadata = {
   alternates: { canonical: "/portfoy" },
 };
 
-export default function PortfolioPage() {
+export default async function PortfolioPage() {
   const projects = readProjects();
+  const { t } = await getT();
   return (
     <div className="mx-auto max-w-6xl px-5 md:px-8 py-12 md:py-16">
-      <FrameReveal label="Portföy" className="mb-8" />
+      <FrameReveal label={t("nav.portfolio")} className="mb-8" />
       <AnimatedHeading
-        text="Projelerimiz"
+        text={t("portfolio.heading")}
         as="h1"
         className="font-display text-4xl md:text-5xl text-ink max-w-2xl mb-4 text-balance"
       />
       <p className="text-ink-soft max-w-xl mb-10 leading-relaxed">
-        Devam eden ve tamamlanan projelerimizi aşağıda bulabilirsiniz. Bir
-        projeye tıklayarak galerisini ve konumunu görüntüleyebilirsiniz.
+        {t("portfolio.intro")}
       </p>
 
       {projects.length > 0 && (
@@ -37,7 +38,7 @@ export default function PortfolioPage() {
       )}
 
       <Reveal>
-        <FrameReveal label="Tüm Projeler" className="mb-10" />
+        <FrameReveal label={t("portfolio.allProjects")} className="mb-10" />
       </Reveal>
       <EditorialGrid projects={projects} />
     </div>

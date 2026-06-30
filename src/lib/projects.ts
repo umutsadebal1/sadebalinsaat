@@ -62,14 +62,18 @@ export function findProject(projects: Project[], slug: string) {
  * target year. Keeps the "Teslim" vs "Hedeflenen Teslim" wording in one place.
  */
 export function deliveryLabel(p: Pick<Project, "status" | "year">): {
-  label: string;
+  key: string;
   value: string;
 } {
-  const value = (p.year ?? "").trim();
   return {
-    label: p.status === "Tamamlandı" ? "Teslim" : "Hedeflenen Teslim",
-    value,
+    key: p.status === "Tamamlandı" ? "delivery.delivered" : "delivery.target",
+    value: (p.year ?? "").trim(),
   };
+}
+
+/** Translation key for a project status badge. */
+export function statusKey(status: ProjectStatus): string {
+  return status === "Tamamlandı" ? "status.completed" : "status.ongoing";
 }
 
 /** First sentence of a block of text, whitespace-normalised. */

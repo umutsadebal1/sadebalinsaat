@@ -6,6 +6,7 @@ import AnimatedHeading from "@/components/AnimatedHeading";
 import FAQ from "@/components/FAQ";
 import Reveal from "@/components/Reveal";
 import { readSite } from "@/lib/data";
+import { getT } from "@/lib/locale-server";
 
 export const dynamic = "force-dynamic";
 
@@ -16,28 +17,28 @@ export const metadata: Metadata = {
   alternates: { canonical: "/iletisim" },
 };
 
-export default function ContactPage() {
+export default async function ContactPage() {
   const siteConfig = readSite();
+  const { t } = await getT();
   return (
     <div className="mx-auto max-w-6xl px-5 md:px-8 py-20 md:py-28">
-      <FrameReveal label="İletişim" className="mb-10" />
+      <FrameReveal label={t("nav.contact")} className="mb-10" />
       <AnimatedHeading
-        text="Projenizi konuşalım"
+        text={t("contact.heading")}
         as="h1"
         className="font-display text-4xl md:text-5xl text-ink max-w-2xl mb-4 text-balance"
       />
       <p className="text-ink-soft max-w-xl mb-14 leading-relaxed">
-        Sorularınız için formu doldurun veya doğrudan bizi arayın, en kısa
-        sürede dönüş yapalım.
+        {t("contact.intro")}
       </p>
 
       <div className="grid gap-14 lg:grid-cols-[1fr_1.2fr]">
         <div className="flex flex-col gap-10">
           <div className="flex flex-col gap-5">
-            <InfoRow icon={Phone} label="Telefon" value={siteConfig.phoneDisplay} href={`tel:${siteConfig.phoneHref}`} />
-            <InfoRow icon={Mail} label="E-posta" value={siteConfig.email} href={`mailto:${siteConfig.email}`} />
-            <InfoRow icon={MapPin} label="Adres" value={siteConfig.addressShort} />
-            <InfoRow icon={Clock} label="Çalışma Saatleri" value={siteConfig.workingHours} />
+            <InfoRow icon={Phone} label={t("form.phone")} value={siteConfig.phoneDisplay} href={`tel:${siteConfig.phoneHref}`} />
+            <InfoRow icon={Mail} label={t("form.email")} value={siteConfig.email} href={`mailto:${siteConfig.email}`} />
+            <InfoRow icon={MapPin} label={t("contact.address")} value={siteConfig.addressShort} />
+            <InfoRow icon={Clock} label={t("contact.hours")} value={siteConfig.workingHours} />
           </div>
 
           {/*
@@ -50,7 +51,7 @@ export default function ContactPage() {
           <div className="aspect-[4/3] rounded-sm border border-dashed border-line bg-bg-elevated flex flex-col items-center justify-center text-center px-6">
             <MapPin className="h-6 w-6 text-gold-600 mb-3" strokeWidth={1.5} />
             <p className="font-mono-label text-[11px] uppercase tracking-[0.1em] text-ink-soft">
-              Harita alanı — özel kurulum bekleniyor
+              {t("contact.mapPlaceholder")}
             </p>
           </div>
         </div>
@@ -63,10 +64,10 @@ export default function ContactPage() {
       {siteConfig.faq && siteConfig.faq.length > 0 && (
         <div className="mt-24 md:mt-32">
           <Reveal>
-            <FrameReveal label="Sıkça Sorulan Sorular" className="mb-8" />
+            <FrameReveal label={t("contact.faqLabel")} className="mb-8" />
           </Reveal>
           <AnimatedHeading
-            text="Aklınızdaki sorulara yanıtlar"
+            text={t("contact.faqHeading")}
             as="h2"
             className="font-display text-3xl md:text-4xl text-ink mb-10 max-w-xl text-balance"
           />
