@@ -24,6 +24,7 @@ import { SetWhatsAppProject } from "@/components/WhatsAppContext";
 import { findProject, deliveryLabel, statusKey } from "@/lib/projects";
 import { readProjects } from "@/lib/data";
 import { getT } from "@/lib/locale-server";
+import { localizeProject } from "@/lib/content-i18n";
 
 export const dynamic = "force-dynamic";
 
@@ -55,9 +56,10 @@ export default async function ProjectDetailPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const project = findProject(readProjects(), slug);
-  if (!project) notFound();
-  const { t } = await getT();
+  const { locale, t } = await getT();
+  const raw = findProject(readProjects(), slug);
+  if (!raw) notFound();
+  const project = localizeProject(raw, locale);
 
   const sliderImages = [
     { src: project.image, caption: project.title, isRender: project.isRender },

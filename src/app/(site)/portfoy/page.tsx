@@ -6,6 +6,7 @@ import AnimatedHeading from "@/components/AnimatedHeading";
 import Reveal from "@/components/Reveal";
 import { readProjects } from "@/lib/data";
 import { getT } from "@/lib/locale-server";
+import { localizeProjects } from "@/lib/content-i18n";
 
 export const dynamic = "force-dynamic";
 
@@ -17,8 +18,8 @@ export const metadata: Metadata = {
 };
 
 export default async function PortfolioPage() {
-  const projects = readProjects();
-  const { t } = await getT();
+  const { locale, t } = await getT();
+  const projects = localizeProjects(readProjects(), locale);
   return (
     <div className="mx-auto max-w-6xl px-5 md:px-8 py-12 md:py-16">
       <FrameReveal label={t("nav.portfolio")} className="mb-8" />

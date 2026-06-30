@@ -16,21 +16,9 @@ export const metadata: Metadata = {
 };
 
 const PILLARS = [
-  {
-    icon: Target,
-    titleKey: "about.mission",
-    text: "Her bütçeye ve her ihtiyaca uygun, sağlam mühendislikle inşa edilmiş yaşam ve çalışma alanları üretmek.",
-  },
-  {
-    icon: Eye,
-    titleKey: "about.vision",
-    text: "Bölgemizde adıyla güven duyulan, kalitesiyle anılan bir yapı markası olmak.",
-  },
-  {
-    icon: HeartHandshake,
-    titleKey: "about.values",
-    text: "Şeffaflık, zamanında teslim ve detayda özen — her projede taviz vermediğimiz üç ilke.",
-  },
+  { icon: Target, titleKey: "about.mission", textKey: "about.mission.text" },
+  { icon: Eye, titleKey: "about.vision", textKey: "about.vision.text" },
+  { icon: HeartHandshake, titleKey: "about.values", textKey: "about.values.text" },
 ];
 
 export default async function AboutPage() {
@@ -46,11 +34,7 @@ export default async function AboutPage() {
           className="font-display text-4xl md:text-5xl text-ink max-w-2xl mb-6 text-balance"
         />
         <p className="text-ink-soft max-w-2xl leading-relaxed text-[15px] md:text-base">
-          Sadebal Yapı, konut ve ticari projelerde güvenilir mühendislik
-          anlayışını zamansız bir mimari dille birleştiren bir inşaat ve
-          gayrimenkul geliştirme firmasıdır. Her projede; sağlam temelden son
-          detaya kadar aynı titizlikle çalışır, söz verdiğimiz takvime sadık
-          kalırız.
+          {t("about.intro")}
         </p>
       </section>
 
@@ -62,7 +46,7 @@ export default async function AboutPage() {
                 <div className="frame-corner">
                   <p.icon className="h-6 w-6 text-gold-600 mb-4" strokeWidth={1.5} />
                   <h2 className="font-display text-xl text-ink mb-2">{t(p.titleKey)}</h2>
-                  <p className="text-sm text-ink-soft leading-relaxed">{p.text}</p>
+                  <p className="text-sm text-ink-soft leading-relaxed">{t(p.textKey)}</p>
                 </div>
               </Reveal>
             ))}
@@ -78,25 +62,20 @@ export default async function AboutPage() {
           <Reveal delay={100}>
             <div>
               <h3 className="font-display text-2xl text-ink mb-3">
-                Şeffaf bir süreç
+                {t("about.approach1.title")}
               </h3>
               <p className="text-ink-soft leading-relaxed text-[15px]">
-                Projenin ilk gününden teslim anına kadar; bütçe, takvim ve
-                ilerleme konusunda net bilgi veririz. Sürpriz maliyet ve
-                belirsiz tarihler yerine, baştan belirlenmiş ve sadık
-                kalınan bir plan sunarız.
+                {t("about.approach1.text")}
               </p>
             </div>
           </Reveal>
           <Reveal delay={220}>
             <div>
               <h3 className="font-display text-2xl text-ink mb-3">
-                Mühendislikte taviz yok
+                {t("about.approach2.title")}
               </h3>
               <p className="text-ink-soft leading-relaxed text-[15px]">
-                Statik hesaplardan malzeme seçimine kadar her adım, ilgili
-                yönetmeliklere ve uzun ömürlü yapı standartlarına uygun
-                şekilde planlanır ve uygulanır.
+                {t("about.approach2.text")}
               </p>
             </div>
           </Reveal>
@@ -121,8 +100,7 @@ export default async function AboutPage() {
                   {siteConfig.founder.title}
                 </p>
                 <p className="text-ink-soft leading-relaxed text-[15px] max-w-xl">
-                  Sadebal Yapı&apos;yı kuran ve her projede mühendislik
-                  disiplininden ödün vermeyen yaklaşımı şirkete taşıyan isim.
+                  {t("about.founder.bio")}
                 </p>
               </div>
             </div>

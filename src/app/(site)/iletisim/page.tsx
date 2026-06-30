@@ -7,6 +7,7 @@ import FAQ from "@/components/FAQ";
 import Reveal from "@/components/Reveal";
 import { readSite } from "@/lib/data";
 import { getT } from "@/lib/locale-server";
+import { localizeFaq } from "@/lib/content-i18n";
 
 export const dynamic = "force-dynamic";
 
@@ -19,7 +20,8 @@ export const metadata: Metadata = {
 
 export default async function ContactPage() {
   const siteConfig = readSite();
-  const { t } = await getT();
+  const { locale, t } = await getT();
+  const faq = localizeFaq(siteConfig.faq, locale);
   return (
     <div className="mx-auto max-w-6xl px-5 md:px-8 py-20 md:py-28">
       <FrameReveal label={t("nav.contact")} className="mb-10" />
@@ -61,7 +63,7 @@ export default async function ContactPage() {
         </div>
       </div>
 
-      {siteConfig.faq && siteConfig.faq.length > 0 && (
+      {faq.length > 0 && (
         <div className="mt-24 md:mt-32">
           <Reveal>
             <FrameReveal label={t("contact.faqLabel")} className="mb-8" />
@@ -71,7 +73,7 @@ export default async function ContactPage() {
             as="h2"
             className="font-display text-3xl md:text-4xl text-ink mb-10 max-w-xl text-balance"
           />
-          <FAQ items={siteConfig.faq} />
+          <FAQ items={faq} />
         </div>
       )}
     </div>

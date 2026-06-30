@@ -123,6 +123,22 @@ const tr: Dict = {
   "about.mission": "Misyonumuz",
   "about.vision": "Vizyonumuz",
   "about.values": "Değerlerimiz",
+  "about.intro":
+    "Sadebal Yapı, konut ve ticari projelerde güvenilir mühendislik anlayışını zamansız bir mimari dille birleştiren bir inşaat ve gayrimenkul geliştirme firmasıdır. Her projede; sağlam temelden son detaya kadar aynı titizlikle çalışır, söz verdiğimiz takvime sadık kalırız.",
+  "about.mission.text":
+    "Her bütçeye ve her ihtiyaca uygun, sağlam mühendislikle inşa edilmiş yaşam ve çalışma alanları üretmek.",
+  "about.vision.text":
+    "Bölgemizde adıyla güven duyulan, kalitesiyle anılan bir yapı markası olmak.",
+  "about.values.text":
+    "Şeffaflık, zamanında teslim ve detayda özen — her projede taviz vermediğimiz üç ilke.",
+  "about.approach1.title": "Şeffaf bir süreç",
+  "about.approach1.text":
+    "Projenin ilk gününden teslim anına kadar; bütçe, takvim ve ilerleme konusunda net bilgi veririz. Sürpriz maliyet ve belirsiz tarihler yerine, baştan belirlenmiş ve sadık kalınan bir plan sunarız.",
+  "about.approach2.title": "Mühendislikte taviz yok",
+  "about.approach2.text":
+    "Statik hesaplardan malzeme seçimine kadar her adım, ilgili yönetmeliklere ve uzun ömürlü yapı standartlarına uygun şekilde planlanır ve uygulanır.",
+  "about.founder.bio":
+    "Sadebal Yapı'yı kuran ve her projede mühendislik disiplininden ödün vermeyen yaklaşımı şirkete taşıyan isim.",
 };
 
 const en: Dict = {
@@ -240,6 +256,22 @@ const en: Dict = {
   "about.mission": "Our Mission",
   "about.vision": "Our Vision",
   "about.values": "Our Values",
+  "about.intro":
+    "Sadebal Yapı is a construction and real-estate development company that combines a reliable engineering approach with a timeless architectural language in residential and commercial projects. In every project we work with the same diligence — from a solid foundation to the final detail — and stay true to the schedule we promise.",
+  "about.mission.text":
+    "To create living and working spaces built with solid engineering, suited to every budget and need.",
+  "about.vision.text":
+    "To become a construction brand trusted by name and remembered for its quality in our region.",
+  "about.values.text":
+    "Transparency, on-time delivery and care in detail — three principles we never compromise on in any project.",
+  "about.approach1.title": "A transparent process",
+  "about.approach1.text":
+    "From the first day of the project to the moment of delivery, we provide clear information about budget, schedule and progress. Instead of surprise costs and uncertain dates, we offer a plan set from the start and adhered to.",
+  "about.approach2.title": "No compromise in engineering",
+  "about.approach2.text":
+    "From structural calculations to material selection, every step is planned and executed in accordance with the relevant regulations and long-lasting building standards.",
+  "about.founder.bio":
+    "The name who founded Sadebal Yapı and brought to the company an approach that never compromises on engineering discipline in any project.",
 };
 
 const ar: Dict = {
@@ -357,6 +389,22 @@ const ar: Dict = {
   "about.mission": "مهمّتنا",
   "about.vision": "رؤيتنا",
   "about.values": "قيمنا",
+  "about.intro":
+    "صدبال يapı شركة إنشاء وتطوير عقاري تجمع بين نهج هندسي موثوق ولغة معمارية خالدة في المشاريع السكنية والتجارية. في كل مشروع نعمل بالدقة ذاتها — من الأساس المتين حتى آخر تفصيل — ونلتزم بالجدول الذي نَعِد به.",
+  "about.mission.text":
+    "إنتاج مساحات للعيش والعمل مبنية بهندسة متينة وتناسب كل ميزانية وكل حاجة.",
+  "about.vision.text":
+    "أن نكون علامة بناء يُوثَق باسمها ويُشاد بجودتها في منطقتنا.",
+  "about.values.text":
+    "الشفافية والتسليم في الموعد والعناية بالتفاصيل — ثلاثة مبادئ لا نتنازل عنها في أي مشروع.",
+  "about.approach1.title": "عملية شفافة",
+  "about.approach1.text":
+    "من اليوم الأول للمشروع حتى لحظة التسليم، نقدّم معلومات واضحة عن الميزانية والجدول والتقدّم. وبدلًا من التكاليف المفاجئة والمواعيد الغامضة، نقدّم خطة محدَّدة منذ البداية ونلتزم بها.",
+  "about.approach2.title": "لا تنازل في الهندسة",
+  "about.approach2.text":
+    "من الحسابات الإنشائية حتى اختيار المواد، يُخطَّط لكل خطوة وتُنفَّذ وفق اللوائح ذات الصلة ومعايير البناء الطويلة العمر.",
+  "about.founder.bio":
+    "الاسم الذي أسّس صدبال يapı وأضفى على الشركة نهجًا لا يتنازل عن الانضباط الهندسي في أي مشروع.",
 };
 
 const ku: Dict = {
@@ -474,6 +522,22 @@ const ku: Dict = {
   "about.mission": "Mîsyona me",
   "about.vision": "Vîzyona me",
   "about.values": "Nirxên me",
+  "about.intro":
+    "Sadebal Yapî pargîdaniyeke avahîsazî û pêşxistina xanî ye ku têgihiştineke endezyariyê ya pêbawer bi zimanekî mîmariya bêdem re di projeyên niştecî û bazirganî de tevlihev dike. Di her projeyê de em bi heman baldariyê — ji bingehekî xurt heta hûrgiliya dawî — dixebitin û sadiqî bernameya ku soz didin dimînin.",
+  "about.mission.text":
+    "Çêkirina cihên jiyan û xebatê yên bi endezyariyeke xurt avakirî, ku ji bo her budce û her pêdiviyê guncan in.",
+  "about.vision.text":
+    "Bûyîna markeyeke avahîsaziyê ku li herêma me bi navê xwe pê tê bawerkirin û bi kalîteya xwe tê bibîranîn.",
+  "about.values.text":
+    "Şefafî, radestkirina di wextê de û baldarî di hûrgiliyê de — sê prensîbên ku em di tu projeyê de jê dûr nakevin.",
+  "about.approach1.title": "Pêvajoyeke şefaf",
+  "about.approach1.text":
+    "Ji roja yekem a projeyê heta dema radestkirinê, em derbarê budce, bername û pêşveçûnê de agahiyên zelal didin. Li şûna lêçûnên surprîz û dîrokên ne diyar, em planekî ku ji destpêkê hatiye diyarkirin û pê tê sadiqmayîn pêşkêş dikin.",
+  "about.approach2.title": "Di endezyariyê de tawîz tune",
+  "about.approach2.text":
+    "Ji hesabên statîk heta hilbijartina materyalan, her gav li gor rêziknameyên têkildar û standardên avahiyên demdirêj tê plansazkirin û bicîhanîn.",
+  "about.founder.bio":
+    "Navê ku Sadebal Yapî damezrand û nêzîkatiyeke ku di tu projeyê de ji dîsîplîna endezyariyê dûr nakeve anî pargîdaniyê.",
 };
 
 export const MESSAGES: Record<Locale, Dict> = { tr, en, ar, ku };

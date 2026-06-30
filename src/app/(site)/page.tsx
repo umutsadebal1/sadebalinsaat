@@ -10,13 +10,14 @@ import MagneticButton from "@/components/MagneticButton";
 import Testimonials from "@/components/Testimonials";
 import { readProjects, readSite } from "@/lib/data";
 import { getT } from "@/lib/locale-server";
+import { localizeProjects, localizeTestimonials } from "@/lib/content-i18n";
 
 export const dynamic = "force-dynamic";
 
 export default async function Home() {
-  const projects = readProjects();
+  const { locale, t } = await getT();
+  const projects = localizeProjects(readProjects(), locale);
   const siteConfig = readSite();
-  const { t } = await getT();
   return (
     <>
       <Hero />
@@ -150,7 +151,7 @@ export default async function Home() {
           <Reveal>
             <FrameReveal label={t("home.testimonials.label")} className="mb-14" />
           </Reveal>
-          <Testimonials items={siteConfig.testimonials} />
+          <Testimonials items={localizeTestimonials(siteConfig.testimonials, locale)} />
         </section>
       )}
 
