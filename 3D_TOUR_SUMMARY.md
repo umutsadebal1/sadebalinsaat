@@ -73,6 +73,28 @@ yönlendirir** (redirect).
 | `src/components/BuildingTourClient.tsx` | dynamic ssr:false + UI overlay (başlık, lejant, geri) |
 | `src/app/(site)/portfoy/[slug]/3d-tur/page.tsx` | route + redirect (tour kapalıysa) |
 
+## Daireler (göstermelik doluluk) & komşu doku
+
+- **Tüm daireler her zaman görünür** (kata tıklamaya gerek yok): cephede
+  `floorCount × unitsPerFloor` renkli hücre (🟢müsait/🟡rezerve/🔴satıldı), düşük
+  opacity (~0.24), cepheye hafif taşarak (`model.d * 1.04`) modele oturur.
+  Tıkla → bilgi kartı (kat/daire, ~m², durum, WhatsApp); hover → parlar.
+- **`BODY_FRACTION` (0.72):** model bounding box'ı çatı/teknik kütleyi de
+  kapsadığından, daire grid'i yüksekliğin yalnız alt %72'sine (konut cephesi)
+  yerleşir; çatıdaki inşaat/teknik yapılar (modelin gerçek geometrisi) açıkta kalır.
+- **Komşu binalar (yalnız Citylife, `CityNeighbors`):** basit `BoxGeometry`
+  hacimler, **sahnede hardcoded** (projects.json'a veri eklenmedi). Yön ekseni:
+  `−X=BATI (giriş cephesi), +X=DOĞU, −Z=KUZEY, +Z=GÜNEY`.
+  - **BATI ve GÜNEY tamamen boş** (giriş cephesi engelsiz).
+  - **KUZEY:** pembe/somon kütle (~8 kat, `#D4A5A5`).
+  - **DOĞU:** açık krem kütle, daha yüksek (~11 kat, `#E8E4DC`).
+  - Her ikisi arsa dışında, yol payı bırakacak şekilde; uydu zemininin dışına
+    taşmaması için zemine clamp'lenir. Cephelerde prosedürel pencere dokusu.
+- **Kamera başlangıcı:** güneybatıdan kuzeydoğuya bakan diagonal
+  (`[center.x − 22, ~, center.z + 26]`) → batı (giriş) + güney cephe net,
+  K/D komşular arka planda. Komşular sadece Citylife'a özel; ileride proje bazlı
+  `neighborBuildings` verisi gerekirse genelleştirilebilir.
+
 ## Verilen kararlar
 - **Auto-fit:** `modelScale` yoksa model hedef yüksekliğe (~14 birim) ölçeklenir —
   model birimini bilmeden "çalışır" gelsin diye. Data'da `modelScale` verilince o kullanılır.
