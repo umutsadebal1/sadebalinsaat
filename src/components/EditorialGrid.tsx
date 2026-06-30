@@ -117,7 +117,7 @@ export default function EditorialGrid({ projects }: { projects: Project[] }) {
                           {projectSummary(p)}
                         </p>
                         <p className="font-mono-label text-[11px] uppercase tracking-[0.08em] text-gold-700">
-                          {p.location} · {t(delivery.key)}: {delivery.value}
+                          <bdi>{p.location} · {t(delivery.key)}: {delivery.value}</bdi>
                         </p>
                       </div>
                     </Link>

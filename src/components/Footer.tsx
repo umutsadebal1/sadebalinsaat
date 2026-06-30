@@ -78,13 +78,13 @@ export default async function Footer() {
               <li className="flex items-center gap-2">
                 <Phone className="h-3.5 w-3.5 text-gold-600 shrink-0" />
                 <a href={`tel:${siteConfig.phoneHref}`} className="hover:text-ink transition-colors">
-                  {siteConfig.phoneDisplay}
+                  <bdi>{siteConfig.phoneDisplay}</bdi>
                 </a>
               </li>
               <li className="flex items-center gap-2">
                 <Mail className="h-3.5 w-3.5 text-gold-600 shrink-0" />
                 <a href={`mailto:${siteConfig.email}`} className="hover:text-ink transition-colors">
-                  {siteConfig.email}
+                  <bdi>{siteConfig.email}</bdi>
                 </a>
               </li>
               <li className="flex items-start gap-2">

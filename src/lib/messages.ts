@@ -20,6 +20,9 @@ const tr: Dict = {
   "filter.all": "Tümü",
   "delivery.delivered": "Teslim",
   "delivery.target": "Hedeflenen Teslim",
+  "ptype.residential": "Konut",
+  "ptype.commercial": "Ticari",
+  "ptype.mixed": "Karma",
 
   "footer.blurb":
     "Konut ve ticari projelerde sağlam mühendislik, zamansız mimari anlayışıyla geleceğin yapılarını inşa ediyoruz.",
@@ -153,6 +156,9 @@ const en: Dict = {
   "filter.all": "All",
   "delivery.delivered": "Delivered",
   "delivery.target": "Target Delivery",
+  "ptype.residential": "Residential",
+  "ptype.commercial": "Commercial",
+  "ptype.mixed": "Mixed-Use",
 
   "footer.blurb":
     "With solid engineering and a timeless architectural vision, we build the structures of the future in residential and commercial projects.",
@@ -286,6 +292,9 @@ const ar: Dict = {
   "filter.all": "الكل",
   "delivery.delivered": "التسليم",
   "delivery.target": "التسليم المستهدف",
+  "ptype.residential": "سكني",
+  "ptype.commercial": "تجاري",
+  "ptype.mixed": "مختلط",
 
   "footer.blurb":
     "بهندسة متينة ورؤية معمارية خالدة، نبني مبانيَ المستقبل في المشاريع السكنية والتجارية.",
@@ -419,6 +428,9 @@ const ku: Dict = {
   "filter.all": "Hemû",
   "delivery.delivered": "Radestkirin",
   "delivery.target": "Radestkirina armanckirî",
+  "ptype.residential": "Niştecî",
+  "ptype.commercial": "Bazirganî",
+  "ptype.mixed": "Tevlihev",
 
   "footer.blurb":
     "Bi endezyariyeke xurt û têgihiştineke mîmariya bêdem, em avahiyên paşerojê di projeyên niştecî û bazirganî de ava dikin.",

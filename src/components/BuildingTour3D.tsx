@@ -200,9 +200,11 @@ function Building({
             >
               <div className="w-52 rounded-lg border border-line bg-bg-card p-4 text-ink shadow-xl">
                 <p className="font-mono-label text-[10px] uppercase tracking-[0.12em] text-gold-700">
-                  {t("tour.floor")} {sel.f + 1} · {t("tour.unit")} {sel.u + 1}
+                  <bdi>{t("tour.floor")} {sel.f + 1} · {t("tour.unit")} {sel.u + 1}</bdi>
                 </p>
-                <p className="mt-1 font-display text-lg">~{m2} m²</p>
+                <p className="mt-1 font-display text-lg">
+                  <bdi>~{m2} m²</bdi>
+                </p>
                 <p className="mt-1 flex items-center gap-1.5 text-xs text-ink-soft">
                   <span
                     className="inline-block h-2.5 w-2.5 rounded-full"

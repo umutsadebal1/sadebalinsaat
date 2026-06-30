@@ -5,6 +5,7 @@ import Reveal from "@/components/Reveal";
 import AnimatedHeading from "@/components/AnimatedHeading";
 import { readSite } from "@/lib/data";
 import { getT } from "@/lib/locale-server";
+import { localizeFounderTitle } from "@/lib/content-i18n";
 
 export const dynamic = "force-dynamic";
 
@@ -23,7 +24,7 @@ const PILLARS = [
 
 export default async function AboutPage() {
   const siteConfig = readSite();
-  const { t } = await getT();
+  const { locale, t } = await getT();
   return (
     <div>
       <section className="mx-auto max-w-6xl px-5 md:px-8 py-20 md:py-28">
@@ -97,7 +98,7 @@ export default async function AboutPage() {
                   {siteConfig.founder.name}
                 </h2>
                 <p className="font-mono-label text-[12px] uppercase tracking-[0.1em] text-gold-700 mb-3">
-                  {siteConfig.founder.title}
+                  {localizeFounderTitle(siteConfig.founder.title, locale)}
                 </p>
                 <p className="text-ink-soft leading-relaxed text-[15px] max-w-xl">
                   {t("about.founder.bio")}

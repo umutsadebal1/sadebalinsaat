@@ -102,10 +102,12 @@ function InfoRow({
         </p>
         {href ? (
           <a href={href} className="text-ink hover:text-gold-700 transition-colors">
-            {value}
+            <bdi>{value}</bdi>
           </a>
         ) : (
-          <p className="text-ink">{value}</p>
+          <p className="text-ink">
+            <bdi>{value}</bdi>
+          </p>
         )}
       </div>
     </div>

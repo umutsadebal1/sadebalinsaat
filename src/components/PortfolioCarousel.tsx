@@ -97,7 +97,7 @@ export default function PortfolioCarousel({ projects }: { projects: Project[] })
                   {t(statusKey(project.status))}
                 </span>
                 <span className="font-mono-label text-[11px] uppercase tracking-[0.12em] text-gold-200">
-                  {project.location} · {t(delivery.key)}: {delivery.value}
+                  <bdi>{project.location} · {t(delivery.key)}: {delivery.value}</bdi>
                 </span>
               </div>
               <h2 className="font-display text-3xl text-[#F7F4ED] text-balance sm:text-4xl md:text-5xl">

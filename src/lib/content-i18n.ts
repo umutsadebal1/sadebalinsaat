@@ -15,6 +15,8 @@ type ProjectContent = {
   shortSummary?: string;
   description?: string;
   longDescription?: string;
+  rooms?: string;
+  construction?: string[]; // constructionProgress sırasına göre aşama adları
   captions?: string[]; // gallery sırasına göre
 };
 
@@ -27,6 +29,13 @@ const PROJECT_CONTENT: Record<string, Partial<Record<Locale, ProjectContent>>> =
         "A residential project close to the city centre, with commercial units on the ground floor. Construction is ongoing.",
       longDescription:
         "Sadebal Citylife is a mixed-use project that brings together floors suited to both residential and commercial use. While the ground and first floors are reserved for commercial units, the upper floors are designed with apartment layouts suited to family living. The project is being built with a modern facade design and durable material choices, aiming for a long-lasting structure.",
+      rooms: "2+1, 3+1 + Commercial Units",
+      construction: [
+        "Structural Construction",
+        "Fine Workmanship",
+        "Facade Cladding",
+        "Landscaping & Surroundings",
+      ],
       captions: [
         "Facade — daytime view",
         "Facade — corner perspective",
@@ -43,6 +52,13 @@ const PROJECT_CONTENT: Record<string, Partial<Record<Locale, ProjectContent>>> =
         "مشروع سكني قريب من مركز المدينة، مع وحدات تجارية في الطابق الأرضي. العمل في المشروع جارٍ.",
       longDescription:
         "صدبال سيتي لايف مشروع متعدد الاستخدامات يجمع بين طوابق مناسبة للاستخدام السكني والتجاري. فبينما يُخصَّص الطابقان الأرضي والأول للوحدات التجارية، صُمِّمت الطوابق العليا بمخططات شقق ملائمة للحياة العائلية. يُبنى المشروع بتصميم واجهة عصري وخيارات مواد متينة، بهدف الحصول على مبنى طويل العمر.",
+      rooms: "2+1, 3+1 + وحدات تجارية",
+      construction: [
+        "البناء الإنشائي",
+        "الأعمال الدقيقة",
+        "كسوة الواجهة",
+        "التنسيق والمحيط",
+      ],
       captions: [
         "الواجهة — منظر نهاري",
         "الواجهة — منظور الزاوية",
@@ -59,6 +75,13 @@ const PROJECT_CONTENT: Record<string, Partial<Record<Locale, ProjectContent>>> =
         "Projeyeke niştecî li nêzî navenda bajêr, bi yekîneyên bazirganî li qata jêrîn. Avahîsazî didome.",
       longDescription:
         "Sadebal Citylife projeyeke pir-bikaranînê ye ku qatên ji bo bikaranîna niştecî û bazirganî bi hev re tîne. Dema ku qatên jêrîn û yekem ji bo yekîneyên bazirganî têne veqetandin, qatên jorîn bi planên xaniyan ên ji bo jiyana malbatî hatine sêwirandin. Proje bi sêwiraneke rûyê nûjen û hilbijartinên materyalên xurt tê avakirin, bi armanca avahiyeke demdirêj.",
+      rooms: "2+1, 3+1 + Yekîneyên Bazirganî",
+      construction: [
+        "Avahîsaziya Xav",
+        "Xebata Hûrgilî",
+        "Rûkêşa Rû",
+        "Peyzaj & Dorhêl",
+      ],
       captions: [
         "Rû — dîmena rojê",
         "Rû — perspektîfa quncikê",
@@ -242,11 +265,28 @@ export function localizeProject(p: Project, locale: Locale): Project {
     shortSummary: c.shortSummary ?? p.shortSummary,
     description: c.description ?? p.description,
     longDescription: c.longDescription ?? p.longDescription,
+    rooms: c.rooms ?? p.rooms,
+    constructionProgress:
+      c.construction && p.constructionProgress
+        ? p.constructionProgress.map((s, i) => ({ ...s, stage: c.construction![i] ?? s.stage }))
+        : p.constructionProgress,
     gallery:
       c.captions && p.gallery
         ? p.gallery.map((g, i) => ({ ...g, caption: c.captions![i] ?? g.caption }))
         : p.gallery,
   };
+}
+
+// --- Founder title (data/site.json) ---
+const FOUNDER_TITLE: Partial<Record<Locale, Record<string, string>>> = {
+  en: { "Şirket Kurucusu": "Company Founder" },
+  ar: { "Şirket Kurucusu": "مؤسّس الشركة" },
+  ku: { "Şirket Kurucusu": "Damezrênerê Pargîdaniyê" },
+};
+
+export function localizeFounderTitle(title: string, locale: Locale): string {
+  if (locale === "tr") return title;
+  return FOUNDER_TITLE[locale]?.[title] ?? title;
 }
 
 export function localizeProjects(list: Project[], locale: Locale): Project[] {

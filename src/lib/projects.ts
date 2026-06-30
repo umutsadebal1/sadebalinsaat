@@ -76,6 +76,13 @@ export function statusKey(status: ProjectStatus): string {
   return status === "Tamamlandı" ? "status.completed" : "status.ongoing";
 }
 
+/** Translation key for a property type (Konut / Ticari / Karma). */
+export function propertyTypeKey(type: Project["propertyType"]): string {
+  if (type === "Konut") return "ptype.residential";
+  if (type === "Ticari") return "ptype.commercial";
+  return "ptype.mixed";
+}
+
 /** First sentence of a block of text, whitespace-normalised. */
 export function firstSentence(text: string): string {
   const clean = (text ?? "").replace(/\s+/g, " ").trim();

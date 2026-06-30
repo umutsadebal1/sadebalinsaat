@@ -21,7 +21,7 @@ import Reveal from "@/components/Reveal";
 import AnimatedHeading from "@/components/AnimatedHeading";
 import MagneticButton from "@/components/MagneticButton";
 import { SetWhatsAppProject } from "@/components/WhatsAppContext";
-import { findProject, deliveryLabel, statusKey } from "@/lib/projects";
+import { findProject, deliveryLabel, statusKey, propertyTypeKey } from "@/lib/projects";
 import { readProjects } from "@/lib/data";
 import { getT } from "@/lib/locale-server";
 import { localizeProject } from "@/lib/content-i18n";
@@ -72,7 +72,7 @@ export default async function ProjectDetailPage({
     project.rooms && { icon: LayoutGrid, value: project.rooms },
     { icon: MapPin, value: project.location },
     { icon: Calendar, value: `${t(delivery.key)}: ${delivery.value}` },
-    { icon: Building, value: project.propertyType },
+    { icon: Building, value: t(propertyTypeKey(project.propertyType)) },
   ].filter(Boolean) as { icon: typeof MapPin; value: string }[];
 
   return (
@@ -102,7 +102,7 @@ export default async function ProjectDetailPage({
             {t(statusKey(project.status))}
           </span>
           <span className="rounded-full border border-line px-3.5 py-1.5 font-mono-label text-[11px] uppercase tracking-[0.1em] text-ink-soft">
-            {project.propertyType}
+            {t(propertyTypeKey(project.propertyType))}
           </span>
         </div>
 
@@ -126,7 +126,7 @@ export default async function ProjectDetailPage({
               className="inline-flex items-center gap-2 font-mono-label text-[12px] uppercase tracking-[0.06em] text-ink-soft"
             >
               <s.icon className="h-4 w-4 text-gold-600" strokeWidth={1.6} />
-              {s.value}
+              <bdi>{s.value}</bdi>
             </span>
           ))}
         </div>

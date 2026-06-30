@@ -36,7 +36,7 @@ export default function ConstructionProgress({
                   {s.stage}
                 </span>
                 <span className="font-mono-label text-[13px] tabular-nums text-gold-700">
-                  %{pct}
+                  <bdi>%{pct}</bdi>
                 </span>
               </div>
               <div className="h-2 w-full overflow-hidden rounded-full bg-bg-elevated">
