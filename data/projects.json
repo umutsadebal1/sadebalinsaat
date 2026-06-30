@@ -26,9 +26,11 @@
     ],
     "tour3D": {
       "enabled": true,
+      "modelUrl": "/models/sadebal-citylife.glb",
       "floorCount": 10,
       "unitsPerFloor": 4,
-      "satelliteImageUrl": "/images/satellite/sadebal-citylife-satellite.jpg"
+      "satelliteImageUrl": "/images/satellite/sadebal-citylife-satellite.jpg",
+      "modelRotationY": 0
     },
     "gallery": [
       {

@@ -1,67 +1,84 @@
 # 3D Bina Turu — Özet & Bakım Notları
 
-İlk versiyon: **temsili/basit geometri**. Gerçek mimari model (SketchUp) geldiğinde
-güncellenecek. Branch: `feature/3d-building-tour`.
+Artık **gerçek `.glb` modeli** yüklüyor (önceki "basit kutu" sürümünün yerine),
+tamamen **veri-driven**: her proje kendi modeline + ayarlarına sahip olabilir.
 
-## Nasıl test edilir
-1. `npm run dev` → `http://localhost:3000/portfoy/sadebal-citylife` aç.
-2. Sayfa sonundaki CTA bölümünde **"3D Bina Turunu Başlat"** butonuna tıkla
-   (buton yalnızca `tour3D.enabled = true` olan projelerde görünür).
-3. `/portfoy/sadebal-citylife/3d-tur` açılır:
-   - Sürükle → döndür, tekerlek/iki parmak → zoom (mobilde dokunmatik).
-   - Bir **kata** tıkla → o kat vurgulanır, daireler (alt-birimler) belirir.
-   - Bir **daireye** tıkla → sahne içinde bilgi kartı (Kat/Daire, ~m², "Müsait")
-     + **WhatsApp ile Bilgi Al** linki (mesajda proje adı + kat/daire otomatik).
-   - Boş alana tıkla → seçim temizlenir.
-- `next build` ve `npx tsc --noEmit` hatasız geçer (doğrulandı).
+## Nasıl çalışır
+- `data/projects.json > <proje>.tour3D` verisine göre `BuildingTour3D` kendini
+  kurar. Component'te hiçbir proje adı/dosya yolu hardcoded değildir.
+- Model `useGLTF(modelUrl, true)` ile yüklenir (DRACO + meshopt desteği açık).
+- Model otomatik olarak **yatayda ortalanır**, **tabanı zemine** (y=0) oturur ve
+  `modelScale` verilmemişse **hedef yüksekliğe (~14 birim) otomatik ölçeklenir**.
+- Arsa sınırı poligonunun **centroid**'ine yerleşir; ince ayar için `modelPosition`.
+- **Kat tıklama:** gerçek model tek mesh olduğu için, modelin üstüne kat başına
+  **görünmez "hit box"** (raycast katmanı) konur. Modelin geometrisine dokunulmaz;
+  model mesh'lerinin raycast'i kapatılır, sadece hit box'lar tıklama/hover alır.
+  Hover'da kat hafif altın renkle vurgulanır; tıkla → daireler (renkli, durum
+  bazlı) → daireye tıkla → bilgi kartı (kat/daire, ~m², durum, WhatsApp).
+- Yükleme sırasında `useProgress` ile **"3D model yükleniyor… %X (Y/Z MB)"**.
+- `next/dynamic ssr:false` korunur (three yalnızca tarayıcıda, talep üzerine).
 
-## Eklenecek dosya (uydu görüntüsü)
-- **`public/images/satellite/sadebal-citylife-satellite.jpg`**
-  - Mardin'deki gerçek arsa konumunun uydu görüntüsü (kare/1:1 önerilir).
-  - Dosya **yoksa** kod çökmez: zemin sessizce düz toprak rengine (`#8B7355`)
-    düşer (`THREE.TextureLoader` onError fallback'i — `BuildingTour3D.tsx > Ground`).
-  - Eklendiğinde otomatik olarak zemine doku olarak uygulanır.
-  - `tour3D.satelliteImageUrl` alanı (projects.json / admin) ile yol değiştirilebilir.
+## tour3D veri şeması (`data/projects.json`)
+```jsonc
+"tour3D": {
+  "enabled": true,
+  "modelUrl": "/models/sadebal-citylife.glb",
+  "floorCount": 10,
+  "unitsPerFloor": 4,
+  "satelliteImageUrl": "/images/satellite/sadebal-citylife-satellite.jpg",
+  "modelScale": 1.0,            // opsiyonel — yoksa auto-fit
+  "modelRotationY": 0,          // opsiyonel — radyan
+  "modelPosition": { "x": 0, "y": 0, "z": 0 } // opsiyonel — centroid'e göre kaydırma
+}
+```
+`enabled:false` veya `modelUrl` yoksa, `/portfoy/<slug>/3d-tur` **proje detayına
+yönlendirir** (redirect).
+
+## YENİ PROJE EKLEME (adım adım)
+1. Modeli `.glb` olarak hazırla, **`public/models/<slug>.glb`** olarak ekle
+   (ör. `public/models/loca-life.glb`).
+2. `data/projects.json` içinde o projenin `tour3D` objesini doldur:
+   `enabled:true`, `modelUrl:"/models/<slug>.glb"`, `floorCount`, `unitsPerFloor`,
+   `satelliteImageUrl` (varsa).
+3. Proje detay sayfasında "3D Bina Turunu Başlat" butonu otomatik görünür
+   (sadece `tour3D.enabled` olanlarda).
+4. Sahnede modelin oturuşunu kontrol et; gerekiyorsa ince ayar:
+   - **Yamuk/küçük/büyük** → `modelScale` ekle (ör. 0.8, 1.5). Yoksa auto-fit ~14 birim.
+   - **Ön cephe yanlış yöne bakıyor** → `modelRotationY` (radyan; 90° = `1.5708`,
+     180° = `3.1416`).
+   - **Sınırın dışına taşıyor / kaymış** → `modelPosition: { x, y, z }` ile kaydır.
+5. Uydu üstündeki arsa poligonunu projeye göre ayarlamak istersen:
+   `BuildingTour3D.tsx > ARSA_BOUNDARY_POINTS` (oransal 0–1 noktalar).
+
+## ⚠️ Performans — ÖNEMLİ
+- Mevcut `sadebal-citylife.glb` **~54 MB** (texture ağırlıklı). Bu, her ziyaretçi
+  için büyük bir indirme — **mutlaka sıkıştırılmalı.** DRACO sadece geometriyi
+  küçültür (burada geometri zaten küçük); asıl kazanç **texture sıkıştırma**dadır.
+- Önerilen (gltf-transform ile, kalite/boyut dengesi):
+  ```bash
+  npx --yes @gltf-transform/cli optimize public/models/sadebal-citylife.glb \
+    public/models/sadebal-citylife.glb --texture-compress webp --texture-size 1024
+  ```
+  (texture'ları webp + 1024px'e indirir; 54 MB → genelde birkaç MB. Geometri için
+  `--compress draco` da eklenebilir — kod zaten DRACO destekli.)
+- Sıkıştırma **lossy** olduğundan, orijinali yedekte tut. Boyut hedefi: < 8–10 MB.
 
 ## Dosyalar
 | Dosya | Görev |
 |---|---|
-| `src/lib/projects.ts` | `Tour3DConfig` tipi + `Project.tour3D` alanı |
-| `data/projects.json` | Citylife: `tour3D { enabled, floorCount:10, unitsPerFloor:4, satelliteImageUrl }` |
-| `src/app/api/admin/projects/route.ts` | POST'a `tour3D` eklendi (PUT zaten geçiriyordu) |
-| `src/components/BuildingTour3D.tsx` | Asıl 3D sahne (three/r3f/drei) |
-| `src/components/BuildingTourClient.tsx` | `next/dynamic ssr:false` + yükleme durumu |
-| `src/app/(site)/portfoy/[slug]/3d-tur/page.tsx` | Route + temsili uyarı notu |
-| `src/app/(site)/portfoy/[slug]/page.tsx` | Detay CTA'sına "3D Bina Turunu Başlat" butonu |
+| `public/models/<slug>.glb` | Her projenin 3D modeli |
+| `src/lib/projects.ts` | `Tour3DConfig` (modelUrl, modelScale, modelRotationY, modelPosition) |
+| `data/projects.json` | Her projenin `tour3D` verisi |
+| `src/components/BuildingTour3D.tsx` | useGLTF + hit box katmanı + useProgress |
+| `src/components/BuildingTourClient.tsx` | dynamic ssr:false + UI overlay (başlık, lejant, geri) |
+| `src/app/(site)/portfoy/[slug]/3d-tur/page.tsx` | route + redirect (tour kapalıysa) |
 
-## Verilen kararlar (notlar)
-- **Arsa sınırı** `BuildingTour3D.tsx > ARSA_BOUNDARY_POINTS` içinde **oransal
-  (0–1)** noktalar olarak tutuluyor; `toWorld()` ile zemin plane'ine ölçekleniyor.
-  Görseldeki gerçek konuma göre ince ayar için bu diziyi düzenle (kodda `TODO` notu var).
-- **Sınır çizgisi:** kalın soluk **altın glow** (#C9A24B) + ince **petrol yeşili**
-  (#0F3D3E) çizgi, zeminin hemen üstünde (y offset) — flicker yok. Renk/kalınlık
-  `Boundary()` içinde kolayca değiştirilebilir.
-- **Bina** sınırın **centroid**'ine yerleştirildi; footprint `FOOT_W/FOOT_D`,
-  kat yüksekliği `FLOOR_H` sabitleriyle ayarlanıyor. Her kat ayrı `mesh` (tıklanabilir).
-- **Daire sayısı** kat başına `tour3D.unitsPerFloor`'a göre derinlik ekseninde
-  kabaca bölüştürülüyor. Temsili m² basit bir formülle üretiliyor (gerçek değil).
-- **Performans:** `dynamic ssr:false` ile three yalnızca tarayıcıda, talep üzerine
-  yüklenir; `dpr={[1,2]}` ile mobilde aşırı pixel doldurma sınırlı.
-- Route `robots: index:false` — temsili sayfa arama motorlarına açılmıyor.
-
-## Gerçek SketchUp modeli geldiğinde ne değişecek
-Sadece **`src/components/BuildingTour3D.tsx`** değişir; route/buton/veri aynı kalır.
-1. Modeli `.glb`/`.gltf`'e dönüştür (SketchUp → glTF; Blender ile export en temizi),
-   `public/models/sadebal-citylife.glb` olarak ekle.
-2. `Building` bileşenindeki kutu-geometri yığınını, drei `useGLTF('/models/...glb')`
-   ile yüklenen gerçek model ile değiştir (`import { useGLTF } from "@react-three/drei"`).
-3. Kat/daire tıklanabilirliği için: modeldeki mesh'leri isimlendir (ör. `Kat_01`,
-   `Daire_01_03`) ve `traverse` ile `onClick` bağla — mevcut seçim/kart mantığı
-   (`selFloor`/`selUnit` + drei `Html`) aynen yeniden kullanılabilir.
-4. `Ground`, `Boundary`, `OrbitControls`, kamera ve `Html` bilgi kartı **olduğu
-   gibi kalır**. Gerekirse kamera başlangıç pozisyonunu yeni modelin ölçeğine göre ayarla.
-5. `unitsPerFloor`/`floorCount` artık modelden geleceği için `tour3D` alanları
-   opsiyonel meta olarak kalabilir veya kaldırılabilir.
-
-## Bağımlılıklar
-`three@^0.185`, `@react-three/fiber@^9` (React 19 uyumlu), `@react-three/drei@^10`.
+## Verilen kararlar
+- **Auto-fit:** `modelScale` yoksa model hedef yüksekliğe (~14 birim) ölçeklenir —
+  model birimini bilmeden "çalışır" gelsin diye. Data'da `modelScale` verilince o kullanılır.
+- **Hit box raycast:** model mesh'lerinin `raycast`'i no-op yapıldı; sadece kat
+  hit box'ları olay alır → tıklama hep doğru kata gider.
+- **DRACO açık** (`useGLTF(url, true)`): şu anki model draco değil (zararsız), ama
+  sıkıştırılmış model gelince hazır. (Decoder gstatic CDN'den yüklenir.)
+- UI elementlerine (başlık, geri butonu, lejant, arka plan) dokunulmadı; yalnızca
+  geometri kaynağı (kutu → gerçek model) ve kat mekanizması değişti.

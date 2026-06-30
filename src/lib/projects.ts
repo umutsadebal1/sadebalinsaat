@@ -8,12 +8,20 @@ export type ConstructionStage = { stage: string; percent: number };
 /** An interactive floor-plan entry (e.g. "2+1" with its plan image). */
 export type FloorPlan = { type: string; imageUrl: string };
 
-/** Config for the representational 3D building tour. */
+/** Config for the data-driven 3D building tour. */
 export type Tour3DConfig = {
   enabled: boolean;
+  /** Path to the project's .glb model, e.g. "/models/sadebal-citylife.glb". */
+  modelUrl?: string;
   floorCount: number;
   unitsPerFloor: number;
   satelliteImageUrl: string;
+  /** In-scene scale. If omitted, the model is auto-fit to a target height. */
+  modelScale?: number;
+  /** Initial Y-axis rotation (radians). Default 0. */
+  modelRotationY?: number;
+  /** Optional fine-tune offset from the land-boundary centroid (world units). */
+  modelPosition?: { x: number; y: number; z: number };
 };
 
 export type Project = {

@@ -3,7 +3,7 @@
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
-import type { Tour3DConfig } from "@/lib/projects";
+import type { Project } from "@/lib/projects";
 import { useT } from "./LocaleProvider";
 
 function LoadingState() {
@@ -31,23 +31,15 @@ const LEGEND = [
   { color: "#ef4444", key: "tour.sold" },
 ];
 
-export default function BuildingTourClient({
-  config,
-  projectTitle,
-  projectSlug,
-}: {
-  config: Tour3DConfig;
-  projectTitle: string;
-  projectSlug: string;
-}) {
+export default function BuildingTourClient({ project }: { project: Project }) {
   const t = useT();
   return (
     <div className="relative h-[78svh] min-h-[480px] w-full overflow-hidden rounded-sm border border-line bg-petrol-900">
-      <BuildingTour3D config={config} projectTitle={projectTitle} />
+      <BuildingTour3D project={project} />
 
       {/* Title overlay — top left */}
       <div className="pointer-events-none absolute left-4 top-4 rounded-md border border-[#F7F4ED]/15 bg-petrol-900/55 px-4 py-2.5 backdrop-blur-sm">
-        <p className="font-display text-lg text-[#F7F4ED] sm:text-xl">{projectTitle}</p>
+        <p className="font-display text-lg text-[#F7F4ED] sm:text-xl">{project.title}</p>
         <p className="font-mono-label text-[10px] uppercase tracking-[0.18em] text-gold-300">
           {t("tour.repLabel")}
         </p>
@@ -55,7 +47,7 @@ export default function BuildingTourClient({
 
       {/* Back to project — top right */}
       <Link
-        href={`/portfoy/${projectSlug}`}
+        href={`/portfoy/${project.slug}`}
         className="group absolute right-4 top-4 inline-flex items-center gap-1.5 rounded-full border border-[#F7F4ED]/30 bg-petrol-900/40 px-4 py-2 text-xs font-medium text-[#F7F4ED] backdrop-blur-sm transition-colors duration-300 hover:border-[#F7F4ED]/70 hover:bg-petrol-900/60"
       >
         <ArrowLeft className="h-3.5 w-3.5 transition-transform duration-300 group-hover:-translate-x-0.5" />

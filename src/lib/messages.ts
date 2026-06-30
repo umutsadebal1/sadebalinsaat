@@ -99,6 +99,7 @@ const tr: Dict = {
   "tour.unit": "Daire",
   "tour.statusLabel": "Durum",
   "tour.whatsapp": "WhatsApp ile Bilgi Al",
+  "tour.modelLoading": "3D model yükleniyor…",
 
   "form.name": "Ad Soyad",
   "form.phone": "Telefon",
@@ -235,6 +236,7 @@ const en: Dict = {
   "tour.unit": "Unit",
   "tour.statusLabel": "Status",
   "tour.whatsapp": "Get Info via WhatsApp",
+  "tour.modelLoading": "Loading 3D model…",
 
   "form.name": "Full Name",
   "form.phone": "Phone",
@@ -371,6 +373,7 @@ const ar: Dict = {
   "tour.unit": "شقة",
   "tour.statusLabel": "الحالة",
   "tour.whatsapp": "احصل على معلومات عبر واتساب",
+  "tour.modelLoading": "جارٍ تحميل النموذج ثلاثي الأبعاد…",
 
   "form.name": "الاسم الكامل",
   "form.phone": "الهاتف",
@@ -507,6 +510,7 @@ const ku: Dict = {
   "tour.unit": "Xanî",
   "tour.statusLabel": "Rewş",
   "tour.whatsapp": "Bi WhatsApp agahî bistîne",
+  "tour.modelLoading": "Model 3D tê barkirin…",
 
   "form.name": "Nav û Paşnav",
   "form.phone": "Telefon",

@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, Info } from "lucide-react";
 import BuildingTourClient from "@/components/BuildingTourClient";
@@ -29,7 +29,11 @@ export default async function Tour3DPage({
 }) {
   const { slug } = await params;
   const project = findProject(readProjects(), slug);
-  if (!project || !project.tour3D?.enabled) notFound();
+  if (!project) notFound();
+  // 3D tour not ready for this project → send the visitor to its detail page.
+  if (!project.tour3D?.enabled || !project.tour3D.modelUrl) {
+    redirect(`/portfoy/${project.slug}`);
+  }
   const { t } = await getT();
 
   return (
@@ -54,11 +58,7 @@ export default async function Tour3DPage({
         <p className="text-sm text-ink-soft">{t("tour.disclaimer")}</p>
       </div>
 
-      <BuildingTourClient
-        config={project.tour3D}
-        projectTitle={project.title}
-        projectSlug={project.slug}
-      />
+      <BuildingTourClient project={project} />
 
       <p className="mt-4 text-center font-mono-label text-[11px] uppercase tracking-[0.1em] text-ink-soft">
         {t("tour.hint")}
