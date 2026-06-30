@@ -9,6 +9,7 @@ import AnimatedHeading from "@/components/AnimatedHeading";
 import MagneticButton from "@/components/MagneticButton";
 import Testimonials from "@/components/Testimonials";
 import { readProjects, readSite } from "@/lib/data";
+import { statusKey } from "@/lib/projects";
 import { getT } from "@/lib/locale-server";
 import { localizeProjects, localizeTestimonials } from "@/lib/content-i18n";
 
@@ -65,7 +66,7 @@ export default async function Home() {
                 <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-petrol-900/50 via-transparent to-transparent opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
                 {projects[0].isRender && (
                   <div className="absolute top-4 left-4 rounded-full bg-petrol-900/80 px-3 py-1.5 font-mono-label text-[10px] uppercase tracking-[0.1em] text-gold-200">
-                    3D Görselleştirme
+                    {t("common.render3d")}
                   </div>
                 )}
               </Link>
@@ -73,7 +74,7 @@ export default async function Home() {
 
             <Reveal delay={120}>
               <span className="inline-block rounded-full bg-petrol-700 px-3.5 py-1.5 font-mono-label text-[11px] uppercase tracking-[0.1em] text-gold-200 mb-5">
-                {projects[0].status}
+                {t(statusKey(projects[0].status))}
               </span>
               <h2 className="font-display text-3xl md:text-4xl text-ink mb-4 text-balance">
                 {projects[0].title}
@@ -113,7 +114,7 @@ export default async function Home() {
                     />
                     <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-petrol-900/55 via-transparent to-transparent opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
                     <div className="absolute top-3 left-3 rounded-full bg-petrol-900/80 px-3 py-1 font-mono-label text-[10px] uppercase tracking-[0.1em] text-gold-200 backdrop-blur-sm">
-                      {p.status}
+                      {t(statusKey(p.status))}
                     </div>
                   </div>
                   <div className="p-5">
