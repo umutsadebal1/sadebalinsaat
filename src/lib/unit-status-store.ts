@@ -19,7 +19,9 @@ const BLOB_KEY = "unit-statuses.json";
 type Overlay = Record<string, Record<string, UnitAvailability>>;
 
 function blobEnabled() {
-  return !!process.env.BLOB_READ_WRITE_TOKEN;
+  // Classic read-write token OR the newer OIDC setup (BLOB_STORE_ID +
+  // runtime VERCEL_OIDC_TOKEN, which @vercel/blob resolves automatically).
+  return !!(process.env.BLOB_READ_WRITE_TOKEN || process.env.BLOB_STORE_ID);
 }
 
 async function readOverlay(): Promise<Overlay> {
