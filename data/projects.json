@@ -27,7 +27,7 @@
     "tour3D": {
       "enabled": true,
       "modelUrl": "/models/sadebal-citylife.glb",
-      "floorCount": 10,
+      "floorCount": 11,
       "unitsPerFloor": 6,
       "commercialFloors": 1,
       "topFloorUnitIds": ["E", "F"],
