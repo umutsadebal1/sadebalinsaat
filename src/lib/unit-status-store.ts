@@ -25,14 +25,11 @@ function blobEnabled() {
 async function readOverlay(): Promise<Overlay> {
   if (!blobEnabled()) return {};
   try {
-    const { list } = await import("@vercel/blob");
-    const { blobs } = await list({ prefix: BLOB_KEY, limit: 1 });
-    const blob = blobs.find((b) => b.pathname === BLOB_KEY);
-    if (!blob) return {};
-    // Cache-bust + no-store so an edit is visible immediately after saving.
-    const res = await fetch(`${blob.url}?t=${Date.now()}`, { cache: "no-store" });
-    if (!res.ok) return {};
-    return (await res.json()) as Overlay;
+    const { get } = await import("@vercel/blob");
+    // Private blob, read server-side with the token; `get` returns null if absent.
+    const res = await get(BLOB_KEY, { access: "private" });
+    if (!res || res.statusCode !== 200) return {};
+    return (await new Response(res.stream).json()) as Overlay;
   } catch {
     return {};
   }
@@ -57,11 +54,10 @@ export async function writeUnitStatuses(
     const overlay = await readOverlay();
     overlay[slug] = statuses;
     await put(BLOB_KEY, JSON.stringify(overlay), {
-      access: "public",
+      access: "private",
       addRandomSuffix: false,
       allowOverwrite: true,
       contentType: "application/json",
-      cacheControlMaxAge: 0,
     });
     return;
   }
