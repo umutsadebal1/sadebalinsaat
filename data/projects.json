@@ -28,9 +28,77 @@
       "enabled": true,
       "modelUrl": "/models/sadebal-citylife.glb",
       "floorCount": 10,
-      "unitsPerFloor": 4,
+      "unitsPerFloor": 6,
       "satelliteImageUrl": "/images/satellite/sadebal-citylife-satellite.jpg",
-      "modelRotationY": 0
+      "modelRotationY": 0,
+      "floorUnits": [
+        {
+          "id": "A",
+          "label": "Daire A",
+          "type": "2+1",
+          "position": "sol_köşe",
+          "rooms": { "salon": 22.22, "yatakOdasi": 18.5, "cocukOdasi": 16.12, "mutfak": 18.4, "antre": 16.37, "banyo": 5.38, "wc": 1.65, "balkon": 20.02, "kiler": 1.32 },
+          "netM2": 120,
+          "cephe": "batı"
+        },
+        {
+          "id": "B",
+          "label": "Daire B",
+          "type": "3+1",
+          "position": "sol_orta",
+          "rooms": { "salon": 31.93, "oturmaOdasi": 17.65, "yatakOdasi": 17.1, "cocukOdasi": 12.5, "mutfak": 14.85, "antre": 14.07, "geceHolu": 3.0, "banyo": 5.07, "balkon": 5.16, "dus": 2.1 },
+          "netM2": 124,
+          "cephe": "kuzey"
+        },
+        {
+          "id": "C",
+          "label": "Daire C",
+          "type": "3+1",
+          "position": "sag_orta",
+          "rooms": { "salon": 31.93, "oturmaOdasi": 17.65, "yatakOdasi": 17.1, "cocukOdasi": 12.5, "mutfak": 14.85, "antre": 14.07, "geceHolu": 3.0, "banyo": 5.07, "balkon": 5.16, "dus": 2.1 },
+          "netM2": 124,
+          "cephe": "doğu"
+        },
+        {
+          "id": "D",
+          "label": "Daire D",
+          "type": "2+1",
+          "position": "sag_köşe",
+          "rooms": { "salon": 22.22, "yatakOdasi": 18.5, "cocukOdasi": 16.12, "mutfak": 18.4, "antre": 16.37, "banyo": 5.38, "wc": 1.65, "balkon": 20.02, "kiler": 1.32 },
+          "netM2": 120,
+          "cephe": "batı"
+        },
+        {
+          "id": "E",
+          "label": "Daire E",
+          "type": "3+1",
+          "position": "orta_sol",
+          "rooms": { "salon": 31.93, "oturmaOdasi": 17.65, "yatakOdasi": 17.1, "cocukOdasi": 12.5, "mutfak": 14.85, "antre": 14.07, "geceHolu": 3.0, "banyo": 5.07, "balkon": 5.16, "dus": 2.1 },
+          "netM2": 124,
+          "cephe": "güney"
+        },
+        {
+          "id": "F",
+          "label": "Daire F",
+          "type": "3+1",
+          "position": "orta_sag",
+          "rooms": { "salon": 31.93, "oturmaOdasi": 17.65, "yatakOdasi": 17.1, "cocukOdasi": 12.5, "mutfak": 14.85, "antre": 14.07, "geceHolu": 3.0, "banyo": 5.07, "balkon": 5.16, "dus": 2.1 },
+          "netM2": 124,
+          "cephe": "güney"
+        }
+      ],
+      "unitStatuses": {
+        "1-A": "Müsait", "1-B": "Müsait", "1-C": "Müsait", "1-D": "Müsait", "1-E": "Müsait", "1-F": "Müsait",
+        "2-A": "Müsait", "2-B": "Müsait", "2-C": "Müsait", "2-D": "Müsait", "2-E": "Müsait", "2-F": "Müsait",
+        "3-A": "Müsait", "3-B": "Müsait", "3-C": "Müsait", "3-D": "Müsait", "3-E": "Müsait", "3-F": "Müsait",
+        "4-A": "Müsait", "4-B": "Müsait", "4-C": "Müsait", "4-D": "Müsait", "4-E": "Müsait", "4-F": "Müsait",
+        "5-A": "Müsait", "5-B": "Müsait", "5-C": "Müsait", "5-D": "Müsait", "5-E": "Müsait", "5-F": "Müsait",
+        "6-A": "Müsait", "6-B": "Müsait", "6-C": "Müsait", "6-D": "Müsait", "6-E": "Müsait", "6-F": "Müsait",
+        "7-A": "Müsait", "7-B": "Müsait", "7-C": "Müsait", "7-D": "Müsait", "7-E": "Müsait", "7-F": "Müsait",
+        "8-A": "Müsait", "8-B": "Müsait", "8-C": "Müsait", "8-D": "Müsait", "8-E": "Müsait", "8-F": "Müsait",
+        "9-A": "Müsait", "9-B": "Müsait", "9-C": "Müsait", "9-D": "Müsait", "9-E": "Müsait", "9-F": "Müsait",
+        "10-A": "Müsait", "10-B": "Müsait", "10-C": "Müsait", "10-D": "Müsait", "10-E": "Müsait", "10-F": "Müsait"
+      }
     },
     "gallery": [
       {

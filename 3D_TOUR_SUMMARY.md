@@ -77,15 +77,27 @@ yönlendirir** (redirect).
 | `src/components/BuildingTourClient.tsx` | dynamic ssr:false + UI overlay (başlık, lejant, geri) |
 | `src/app/(site)/portfoy/[slug]/3d-tur/page.tsx` | route + redirect (tour kapalıysa) |
 
-## Daireler (göstermelik doluluk) & komşu doku
+## Gerçek kat planı, daireler & durum sistemi
 
-- **Tüm daireler her zaman görünür** (kata tıklamaya gerek yok): cephede
-  `floorCount × unitsPerFloor` renkli hücre (🟢müsait/🟡rezerve/🔴satıldı), düşük
-  opacity (~0.24), cepheye hafif taşarak (`model.d * 1.04`) modele oturur.
-  Tıkla → bilgi kartı (kat/daire, ~m², durum, WhatsApp); hover → parlar.
-- **`BODY_FRACTION` (0.72):** model bounding box'ı çatı/teknik kütleyi de
-  kapsadığından, daire grid'i yüksekliğin yalnız alt %72'sine (konut cephesi)
-  yerleşir; çatıdaki inşaat/teknik yapılar (modelin gerçek geometrisi) açıkta kalır.
+- **Gerçek kat planı verisi:** `tour3D.floorUnits` → her katta tekrar eden daireler
+  (Citylife: 6 daire — A,B,C,D,E,F; her birinde `type`, `netM2`, `cephe`, oda→m²
+  dağılımı). Katta soldan sağa yerleşim `position` alanına göre `orderedFloorUnits`
+  ile sıralanır (sol_köşe→sol_orta→orta_sol→orta_sag→sag_orta→sag_köşe = A,B,E,F,C,D).
+- **Hit box'lar:** binanın X genişliği **`floorUnits.length` (6) eşit parçaya** bölünür;
+  her parça bir daire, yüksekliği tek kat. Tüm daireler her zaman görünür (düşük
+  opacity), cepheye hafif taşarak (`model.d * 1.04`) oturur.
+- **`BODY_FRACTION` (0.72):** grid yüksekliğin alt %72'sine (konut cephesi) yerleşir;
+  çatıdaki inşaat/teknik kütle açıkta kalır.
+- **Durum sistemi:** `tour3D.unitStatuses` → `"<kat>-<daireId>"` (ör. `"5-B"`) →
+  `"Müsait"|"Rezerve"|"Satıldı"` (varsayılan Müsait, 10×6=60 kayıt). Renk buradan gelir
+  (🟢/🟡/🔴). `unitAvailability()` yardımcıyla okunur.
+- **Zengin bilgi kartı:** KAT · DAİRE id → `type · netM2 m²` → Cephe → **Oda Dağılımı**
+  (emoji + i18n oda adı + m²) → durum → WhatsApp (mesajda tip+m²). Oda/cephe adları
+  4 dilde çevrili (`tour.rooms.*`, `tour.dir.*`, `tour.facade`, `tour.roomsTitle`).
+- **Admin:** `ProjectForm` → "Daire Durumları" bölümü (yalnız `tour3D.enabled` +
+  `floorUnits` olan projede). 10×6 renk-kodlu dropdown; kaydet → PUT `tour3D`'yi
+  koruyarak `projects.json`'a yazar. (Not: Vercel FS salt-okunur olduğundan canlıda
+  admin değişikliği kalıcı olmaz; yerel/veri düzeyinde çalışır.)
 ## Şehir ortamı (yalnız Citylife, `CityEnvironment`)
 
 Yön ekseni: `−X=BATI (giriş cephesi), +X=DOĞU, −Z=KUZEY, +Z=GÜNEY`.

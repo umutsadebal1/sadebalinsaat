@@ -10,7 +10,11 @@ import type {
   GalleryItem,
   ConstructionStage,
   FloorPlan,
+  UnitAvailability,
 } from "@/lib/projects";
+import { orderedFloorUnits } from "@/lib/projects";
+
+const UNIT_STATUSES: UnitAvailability[] = ["Müsait", "Rezerve", "Satıldı"];
 
 type Props = { initial?: Project };
 
@@ -164,6 +168,20 @@ export default function ProjectForm({ initial }: Props) {
     const url = await uploadFile(file);
     if (url) updateFloorPlan(i, { imageUrl: url });
     e.target.value = "";
+  }
+
+  // --- Unit statuses (daire durumları) — 3D tour ---
+  function setUnitStatus(key: string, status: UnitAvailability) {
+    setForm((f) => {
+      if (!f.tour3D) return f;
+      return {
+        ...f,
+        tour3D: {
+          ...f.tour3D,
+          unitStatuses: { ...(f.tour3D.unitStatuses ?? {}), [key]: status },
+        },
+      };
+    });
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -411,6 +429,66 @@ export default function ProjectForm({ initial }: Props) {
         </button>
       </Section>
 
+      {form.tour3D?.enabled && (form.tour3D.floorUnits?.length ?? 0) > 0 && (
+        <Section
+          title="Daire Durumları"
+          hint="Her dairenin satış durumu — 3D bina turunda renk olarak görünür (Müsait=yeşil, Rezerve=sarı, Satıldı=kırmızı)"
+        >
+          {(() => {
+            const t3d = form.tour3D!;
+            const ordered = orderedFloorUnits(t3d.floorUnits ?? []);
+            const floors = Array.from({ length: t3d.floorCount }, (_, i) => i + 1);
+            return (
+              <div className="overflow-x-auto">
+                <table className="w-full min-w-[520px] border-collapse text-sm">
+                  <thead>
+                    <tr>
+                      <th className="p-1.5 text-left font-mono-label text-[11px] uppercase tracking-[0.08em] text-ink-soft">
+                        Kat
+                      </th>
+                      {ordered.map((u) => (
+                        <th key={u.id} className="p-1.5 text-center">
+                          <span className="font-mono-label text-[11px] uppercase tracking-[0.08em] text-ink">
+                            {u.id}
+                          </span>
+                          <span className="block text-[10px] text-ink-soft">{u.type}</span>
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {floors.map((floor) => (
+                      <tr key={floor} className="border-t border-line">
+                        <td className="p-1.5 font-medium text-ink">{floor}</td>
+                        {ordered.map((u) => {
+                          const key = `${floor}-${u.id}`;
+                          const val = t3d.unitStatuses?.[key] ?? "Müsait";
+                          return (
+                            <td key={u.id} className="p-1">
+                              <select
+                                value={val}
+                                onChange={(e) => setUnitStatus(key, e.target.value as UnitAvailability)}
+                                className={`w-full rounded border px-1.5 py-1 text-xs outline-none ${statusCls(val)}`}
+                              >
+                                {UNIT_STATUSES.map((s) => (
+                                  <option key={s} value={s}>
+                                    {s}
+                                  </option>
+                                ))}
+                              </select>
+                            </td>
+                          );
+                        })}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            );
+          })()}
+        </Section>
+      )}
+
       {error && <p className="text-sm text-red-500">{error}</p>}
 
       <div className="flex items-center gap-3">
@@ -436,6 +514,12 @@ export default function ProjectForm({ initial }: Props) {
 
 const inputCls =
   "w-full rounded-md border border-line bg-bg px-3 py-2.5 text-sm text-ink outline-none transition-colors focus:border-gold-600";
+
+function statusCls(s: string) {
+  if (s === "Satıldı") return "border-red-500/40 bg-red-500/10 text-red-600";
+  if (s === "Rezerve") return "border-yellow-500/40 bg-yellow-500/10 text-yellow-700";
+  return "border-green-500/40 bg-green-500/10 text-green-700";
+}
 
 function Section({ title, hint, children }: { title: string; hint?: string; children: React.ReactNode }) {
   return (

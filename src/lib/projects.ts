@@ -8,6 +8,23 @@ export type ConstructionStage = { stage: string; percent: number };
 /** An interactive floor-plan entry (e.g. "2+1" with its plan image). */
 export type FloorPlan = { type: string; imageUrl: string };
 
+/** Availability of a single unit (stored in Turkish in the data). */
+export type UnitAvailability = "Müsait" | "Rezerve" | "Satıldı";
+
+/**
+ * A single apartment in the (repeating) real floor plan. `rooms` maps a room
+ * key (salon, yatakOdasi, …) to its net m². Same layout repeats on every floor.
+ */
+export type FloorUnit = {
+  id: string; // "A".."F"
+  label: string; // "Daire A"
+  type: string; // "2+1", "3+1"
+  position: string; // "sol_köşe", "orta_sag", …  (soldan sağa sıralama için)
+  rooms: Record<string, number>;
+  netM2: number;
+  cephe: string; // "batı", "kuzey", "doğu", "güney"
+};
+
 /** Config for the data-driven 3D building tour. */
 export type Tour3DConfig = {
   enabled: boolean;
@@ -22,7 +39,42 @@ export type Tour3DConfig = {
   modelRotationY?: number;
   /** Optional fine-tune offset from the land-boundary centroid (world units). */
   modelPosition?: { x: number; y: number; z: number };
+  /** Real floor plan: the units that repeat on each floor (left→right by position). */
+  floorUnits?: FloorUnit[];
+  /** Per-unit availability, keyed `"<floor>-<unitId>"` (e.g. "5-B"). Default: Müsait. */
+  unitStatuses?: Record<string, UnitAvailability>;
 };
+
+/** Left→right physical order of unit positions, used to place hit boxes. */
+export const UNIT_POSITION_ORDER = [
+  "sol_köşe",
+  "sol_orta",
+  "orta_sol",
+  "orta_sag",
+  "sag_orta",
+  "sag_köşe",
+] as const;
+
+/** Floor units sorted left→right by their `position` (stable fallback: input order). */
+export function orderedFloorUnits(units: FloorUnit[]): FloorUnit[] {
+  const rank = (p: string) => {
+    const i = UNIT_POSITION_ORDER.indexOf(p as (typeof UNIT_POSITION_ORDER)[number]);
+    return i === -1 ? 999 : i;
+  };
+  return units
+    .map((u, i) => ({ u, i }))
+    .sort((a, b) => rank(a.u.position) - rank(b.u.position) || a.i - b.i)
+    .map(({ u }) => u);
+}
+
+/** Availability of a given floor/unit, defaulting to "Müsait". */
+export function unitAvailability(
+  tour3D: Tour3DConfig | undefined,
+  floor1: number,
+  unitId: string
+): UnitAvailability {
+  return tour3D?.unitStatuses?.[`${floor1}-${unitId}`] ?? "Müsait";
+}
 
 export type Project = {
   slug: string;

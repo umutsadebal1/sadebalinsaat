@@ -4,7 +4,8 @@ import { Suspense, useEffect, useMemo, useState } from "react";
 import { Canvas } from "@react-three/fiber";
 import { OrbitControls, Html, useGLTF, useProgress } from "@react-three/drei";
 import * as THREE from "three";
-import type { Project, Tour3DConfig } from "@/lib/projects";
+import type { Project, Tour3DConfig, FloorUnit, UnitAvailability } from "@/lib/projects";
+import { orderedFloorUnits, unitAvailability } from "@/lib/projects";
 import { useT } from "./LocaleProvider";
 
 /**
@@ -37,26 +38,39 @@ const BODY_FRACTION = 0.72;
 const CAM_XZ: [number, number] = [-30, 34];
 const TGT_XZ: [number, number] = [0, 0];
 
-/** Availability status — göstermelik (demo). Renkler gerçek doluluk değil. */
-type UnitStatus = "available" | "reserved" | "sold";
-const STATUS: Record<UnitStatus, { color: string; labelKey: string }> = {
-  available: { color: "#22c55e", labelKey: "tour.available" },
-  reserved: { color: "#eab308", labelKey: "tour.reserved" },
-  sold: { color: "#ef4444", labelKey: "tour.sold" },
+/** Availability → colour + i18n label key (status stored in Turkish in data). */
+const STATUS_TR: Record<UnitAvailability, { color: string; key: string }> = {
+  Müsait: { color: "#22c55e", key: "tour.available" },
+  Rezerve: { color: "#eab308", key: "tour.reserved" },
+  Satıldı: { color: "#ef4444", key: "tour.sold" },
 };
 
-function unitStatus(floor: number, unit: number, floorCount: number): UnitStatus {
-  const h = (floor * 2654435761 + unit * 40503) >>> 0;
-  const r = h % 100;
-  const availabilityBoost = (floor / Math.max(1, floorCount - 1)) * 30;
-  const score = r + availabilityBoost;
-  if (score < 35) return "sold";
-  if (score < 60) return "reserved";
-  return "available";
-}
+/** Emoji per room key (keys come from the floor-plan data). */
+const ROOM_EMOJI: Record<string, string> = {
+  salon: "🛋️",
+  oturmaOdasi: "🪑",
+  yatakOdasi: "🛏️",
+  cocukOdasi: "🧸",
+  mutfak: "🍳",
+  antre: "🚪",
+  geceHolu: "🌙",
+  banyo: "🛁",
+  wc: "🚽",
+  dus: "🚿",
+  balkon: "🌿",
+  kiler: "📦",
+};
 
-function waLink(projectTitle: string, floor: number, unit: number) {
-  const msg = `Merhaba, ${projectTitle} - Kat ${floor}, Daire ${unit} hakkında bilgi almak istiyorum.`;
+/** Turkish façade direction → i18n key. */
+const FACADE_KEY: Record<string, string> = {
+  batı: "tour.dir.west",
+  kuzey: "tour.dir.north",
+  doğu: "tour.dir.east",
+  güney: "tour.dir.south",
+};
+
+function waLink(projectTitle: string, floor: number, unit: FloorUnit) {
+  const msg = `Merhaba, ${projectTitle} Kat ${floor} Daire ${unit.id} (${unit.type}, ${unit.netM2}m²) hakkında bilgi almak istiyorum.`;
   return `https://wa.me/${PHONE}?text=${encodeURIComponent(msg)}`;
 }
 
@@ -402,7 +416,13 @@ function BuildingModel({
 }) {
   const t = useT();
   const { scene } = useGLTF(tour3D.modelUrl!, true);
-  const { floorCount, unitsPerFloor } = tour3D;
+  const { floorCount } = tour3D;
+  // Real floor plan: units repeat on every floor, ordered left→right.
+  const units = useMemo(
+    () => (tour3D.floorUnits?.length ? orderedFloorUnits(tour3D.floorUnits) : []),
+    [tour3D.floorUnits]
+  );
+  const N = units.length || tour3D.unitsPerFloor;
 
   const model = useMemo(() => {
     const object = scene.clone(true);
@@ -436,7 +456,7 @@ function BuildingModel({
   const rotY = tour3D.modelRotationY ?? 0;
   const pos = tour3D.modelPosition ?? { x: 0, y: 0, z: 0 };
   const floors = Array.from({ length: floorCount }, (_, i) => i);
-  const unitX = (u: number) => -model.w / 2 + (u + 0.5) * (model.w / unitsPerFloor);
+  const unitX = (u: number) => -model.w / 2 + (u + 0.5) * (model.w / N);
 
   return (
     <group
@@ -448,12 +468,13 @@ function BuildingModel({
           <primitive object={model.object} />
         </group>
 
-        {/* All units always visible — göstermelik doluluk, hugging the façade */}
+        {/* All units always visible — coloured by real availability data */}
         {floors.map((f) =>
-          Array.from({ length: unitsPerFloor }, (_, u) => {
+          Array.from({ length: N }, (_, u) => {
             const y = f * floorH + floorH / 2;
-            const st = unitStatus(f, u, floorCount);
-            const sc = STATUS[st].color;
+            const unit = units[u];
+            const status = unit ? unitAvailability(tour3D, f + 1, unit.id) : "Müsait";
+            const sc = STATUS_TR[status].color;
             const isSel = sel?.f === f && sel?.u === u;
             const isHover = hover?.f === f && hover?.u === u;
             return (
@@ -475,9 +496,7 @@ function BuildingModel({
                   setSel({ f, u });
                 }}
               >
-                <boxGeometry
-                  args={[(model.w / unitsPerFloor) * 0.9, floorH * 0.72, model.d * 1.04]}
-                />
+                <boxGeometry args={[(model.w / N) * 0.9, floorH * 0.72, model.d * 1.04]} />
                 <meshStandardMaterial
                   color={sc}
                   emissive={sc}
@@ -491,39 +510,65 @@ function BuildingModel({
           })
         )}
 
-        {/* Info card for the selected unit */}
+        {/* Info card for the selected unit — real floor-plan data */}
         {sel &&
+          units[sel.u] &&
           (() => {
+            const unit = units[sel.u];
+            const floor1 = sel.f + 1;
             const y = sel.f * floorH + floorH / 2;
-            const st = unitStatus(sel.f, sel.u, floorCount);
-            const info = STATUS[st];
-            const m2 = 85 + ((sel.f + sel.u) % 4) * 12;
+            const status = unitAvailability(tour3D, floor1, unit.id);
+            const info = STATUS_TR[status];
             return (
               <Html
                 position={[unitX(sel.u) + model.w / 2 + 0.4, y + 0.4, 0]}
                 distanceFactor={16}
                 style={{ pointerEvents: "auto" }}
               >
-                <div className="w-52 rounded-lg border border-line bg-bg-card p-4 text-ink shadow-xl">
+                <div className="w-60 rounded-lg border border-line bg-bg-card p-4 text-ink shadow-xl">
                   <p className="font-mono-label text-[10px] uppercase tracking-[0.12em] text-gold-700">
                     <bdi>
-                      {t("tour.floor")} {sel.f + 1} · {t("tour.unit")} {sel.u + 1}
+                      {t("tour.floor")} {floor1} · {t("tour.unit")} {unit.id}
                     </bdi>
                   </p>
                   <p className="mt-1 font-display text-lg">
-                    <bdi>~{m2} m²</bdi>
+                    <bdi>
+                      {unit.type} · {unit.netM2} m²
+                    </bdi>
                   </p>
-                  <p className="mt-1 flex items-center gap-1.5 text-xs text-ink-soft">
+                  <p className="mt-0.5 text-xs text-ink-soft">
+                    {t("tour.facade")}:{" "}
+                    <bdi className="text-ink">{t(FACADE_KEY[unit.cephe] ?? unit.cephe)}</bdi>
+                  </p>
+
+                  <p className="mt-3 mb-1 font-mono-label text-[10px] uppercase tracking-[0.1em] text-ink-soft">
+                    {t("tour.roomsTitle")}
+                  </p>
+                  <ul className="max-h-44 space-y-0.5 overflow-y-auto pr-1">
+                    {Object.entries(unit.rooms).map(([key, m2]) => (
+                      <li
+                        key={key}
+                        className="flex items-center justify-between gap-2 text-xs"
+                      >
+                        <span className="flex items-center gap-1.5 text-ink-soft">
+                          <span aria-hidden>{ROOM_EMOJI[key] ?? "•"}</span>
+                          {t(`tour.rooms.${key}`)}
+                        </span>
+                        <bdi className="tabular-nums text-ink">{m2} m²</bdi>
+                      </li>
+                    ))}
+                  </ul>
+
+                  <p className="mt-3 flex items-center gap-1.5 text-xs text-ink-soft">
                     <span
                       className="inline-block h-2.5 w-2.5 rounded-full"
                       style={{ backgroundColor: info.color }}
                     />
-                    {t("tour.statusLabel")}:{" "}
-                    <span className="font-medium text-ink">{t(info.labelKey)}</span>
+                    <span className="font-medium text-ink">{t(info.key)}</span>
                   </p>
-                  {st !== "sold" && (
+                  {status !== "Satıldı" && (
                     <a
-                      href={waLink(projectTitle, sel.f + 1, sel.u + 1)}
+                      href={waLink(projectTitle, floor1, unit)}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="mt-3 flex items-center justify-center gap-2 rounded-md bg-[#25D366] px-3 py-2 text-xs font-medium text-white transition-colors hover:bg-[#1ebe5b]"
