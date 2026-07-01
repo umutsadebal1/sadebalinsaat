@@ -5,6 +5,7 @@ import { ArrowLeft, Info } from "lucide-react";
 import BuildingTourClient from "@/components/BuildingTourClient";
 import { findProject } from "@/lib/projects";
 import { readProjects } from "@/lib/data";
+import { readUnitStatuses } from "@/lib/unit-status-store";
 import { getT } from "@/lib/locale-server";
 
 export const dynamic = "force-dynamic";
@@ -28,12 +29,23 @@ export default async function Tour3DPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const project = findProject(readProjects(), slug);
-  if (!project) notFound();
+  const base = findProject(readProjects(), slug);
+  if (!base) notFound();
   // 3D tour not ready for this project → send the visitor to its detail page.
-  if (!project.tour3D?.enabled || !project.tour3D.modelUrl) {
-    redirect(`/portfoy/${project.slug}`);
+  if (!base.tour3D?.enabled || !base.tour3D.modelUrl) {
+    redirect(`/portfoy/${base.slug}`);
   }
+  // Merge live admin-set unit statuses (persistent store) onto the project.
+  const overrides = await readUnitStatuses(slug);
+  const project = overrides
+    ? {
+        ...base,
+        tour3D: {
+          ...base.tour3D,
+          unitStatuses: { ...(base.tour3D.unitStatuses ?? {}), ...overrides },
+        },
+      }
+    : base;
   const { t } = await getT();
 
   return (

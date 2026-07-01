@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import ProjectForm from "@/components/admin/ProjectForm";
 import { readProjects } from "@/lib/data";
+import { readUnitStatuses } from "@/lib/unit-status-store";
 
 export const dynamic = "force-dynamic";
 
@@ -10,8 +11,21 @@ export default async function EditProjectPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const project = readProjects().find((p) => p.slug === slug);
-  if (!project) notFound();
+  const base = readProjects().find((p) => p.slug === slug);
+  if (!base) notFound();
+
+  // Show the persisted (live) unit statuses in the form.
+  const overrides = await readUnitStatuses(slug);
+  const project =
+    overrides && base.tour3D
+      ? {
+          ...base,
+          tour3D: {
+            ...base.tour3D,
+            unitStatuses: { ...(base.tour3D.unitStatuses ?? {}), ...overrides },
+          },
+        }
+      : base;
 
   return (
     <div>

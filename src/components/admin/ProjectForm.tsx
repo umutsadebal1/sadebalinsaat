@@ -58,6 +58,8 @@ export default function ProjectForm({ initial }: Props) {
   );
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+  const [savingStatuses, setSavingStatuses] = useState(false);
+  const [statusMsg, setStatusMsg] = useState("");
 
   const folder = (form.slug || slugifyTr(form.title) || "yeni-proje").trim();
 
@@ -182,6 +184,27 @@ export default function ProjectForm({ initial }: Props) {
         },
       };
     });
+  }
+
+  // Persists ONLY the statuses (works on Vercel via Blob) — separate from the
+  // full-project save so "Satıldı" instantly reflects in the live 3D tour.
+  async function saveUnitStatuses() {
+    if (!initial) return;
+    setSavingStatuses(true);
+    setStatusMsg("");
+    const res = await fetch(`/api/admin/projects/${initial.slug}/unit-statuses`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ unitStatuses: form.tour3D?.unitStatuses ?? {} }),
+    });
+    setSavingStatuses(false);
+    if (res.ok) {
+      setStatusMsg("Kaydedildi ✓ — 3D tura yansıdı.");
+      router.refresh();
+    } else {
+      const d = await res.json().catch(() => ({}));
+      setStatusMsg(d.error || "Kaydedilemedi.");
+    }
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -486,6 +509,26 @@ export default function ProjectForm({ initial }: Props) {
               </div>
             );
           })()}
+          <div className="mt-4 flex flex-wrap items-center gap-3">
+            <button
+              type="button"
+              onClick={saveUnitStatuses}
+              disabled={savingStatuses}
+              className="inline-flex items-center gap-2 rounded-md bg-gold-600 px-4 py-2.5 text-sm font-medium text-petrol-900 transition-colors hover:bg-gold-400 disabled:opacity-60"
+            >
+              {savingStatuses ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Save className="h-4 w-4" />
+              )}
+              Daire Durumlarını Kaydet
+            </button>
+            {statusMsg && <span className="text-sm text-ink-soft">{statusMsg}</span>}
+          </div>
+          <p className="mt-2 text-xs text-ink-soft">
+            Bu bölüm ayrı kaydedilir ve canlı 3D tura anında yansır (aşağıdaki genel
+            &quot;Kaydet&quot; butonundan bağımsız).
+          </p>
         </Section>
       )}
 

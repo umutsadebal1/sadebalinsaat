@@ -102,9 +102,20 @@ yönlendirir** (redirect).
   (emoji + i18n oda adı + m²) → durum → WhatsApp (mesajda tip+m²). Oda/cephe adları
   4 dilde çevrili (`tour.rooms.*`, `tour.dir.*`, `tour.facade`, `tour.roomsTitle`).
 - **Admin:** `ProjectForm` → "Daire Durumları" bölümü (yalnız `tour3D.enabled` +
-  `floorUnits` olan projede). 10×6 renk-kodlu dropdown; kaydet → PUT `tour3D`'yi
-  koruyarak `projects.json`'a yazar. (Not: Vercel FS salt-okunur olduğundan canlıda
-  admin değişikliği kalıcı olmaz; yerel/veri düzeyinde çalışır.)
+  `floorUnits` olan projede). 10×6 renk-kodlu dropdown + **"Daire Durumlarını Kaydet"**
+  (genel Kaydet'ten ayrı) → `PUT /api/admin/projects/<slug>/unit-statuses`.
+
+### Kalıcılık — `src/lib/unit-status-store.ts`
+- Daire durumları **overlay** olarak ayrı tutulur; bundled `projects.json` yapı/içerik
+  için kaynak olmaya devam eder (kod düzenlemeleri donmaz).
+- **Vercel'de:** `BLOB_READ_WRITE_TOKEN` varsa → tek JSON **Vercel Blob**'da
+  (`unit-statuses.json`, `slug → {kat-daire → durum}`). Okuma cache-bust + `no-store`
+  (kaydettikten hemen sonra canlıya yansır).
+- **Yerelde:** token yoksa → doğrudan `projects.json`'a yazılır (fallback).
+- **Merge:** `3d-tur/page.tsx` ve admin edit sayfası `readUnitStatuses(slug)` ile
+  overlay'i `tour3D.unitStatuses` üstüne bindirir. `unitAvailability()` renk için okur.
+- **Vercel kurulumu (bir kez):** Vercel → Storage → **Blob** → Create → projeye
+  Connect (env otomatik gelir) → redeploy. Sonra admin değişiklikleri canlıda kalıcı.
 ## Şehir ortamı (yalnız Citylife, `CityEnvironment`)
 
 Yön ekseni: `−X=BATI (giriş cephesi), +X=DOĞU, −Z=KUZEY, +Z=GÜNEY`.
