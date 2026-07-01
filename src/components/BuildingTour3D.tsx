@@ -2,50 +2,40 @@
 
 import { Suspense, useEffect, useMemo, useState } from "react";
 import { Canvas } from "@react-three/fiber";
-import { OrbitControls, Line, Html, useGLTF, useProgress } from "@react-three/drei";
+import { OrbitControls, Html, useGLTF, useProgress } from "@react-three/drei";
 import * as THREE from "three";
 import type { Project, Tour3DConfig } from "@/lib/projects";
 import { useT } from "./LocaleProvider";
 
 /**
- * Approximate land-boundary as proportional (0–1) points in the satellite
- * image space (x = left→right, y = top→bottom).
- * TODO: gerçek ölçülerle / kadastro verisiyle ince ayar yapılabilir.
- */
-const ARSA_BOUNDARY_POINTS: [number, number][] = [
-  [0.5061, 0.2546],
-  [0.6207, 0.2392],
-  [0.6207, 0.3086],
-  [0.6076, 0.4321],
-  [0.5295, 0.4321],
-  [0.5061, 0.3704],
-];
-
-const GROUND_W = 60; // world units along x; depth (z) derives from image aspect
-const DIRT_COLOR = "#8B7355";
-const PETROL = "#0F3D3E";
-const GOLD = "#C9A24B";
-const PHONE = "905324618398";
-
-/**
- * Scene axis ↔ compass convention (representational, Citylife-specific):
+ * Stylised city environment around the real Sadebal Citylife .glb model.
+ * The satellite ground is gone — instead a terrain + road grid + procedural
+ * building blocks + a mountain range give a "real city" feel. The main model
+ * sits at the world origin; the WEST (entrance) view corridor is kept clear.
+ *
+ * Axis ↔ compass convention (representational, Citylife-specific):
  *   −X = WEST (entrance / SADEBAL façade),  +X = EAST
  *   −Z = NORTH,                             +Z = SOUTH
- * The camera starts at the SOUTH-WEST corner looking NORTH-EAST, so the WEST
- * (entrance) and SOUTH faces stay completely clear. Neighbour blocks only sit
- * on the NORTH and EAST sides — WEST and SOUTH are never obstructed.
  */
 const CITYLIFE_SLUG = "sadebal-citylife";
 
+const PETROL = "#0F3D3E";
+const TERRAIN = "#767c63";
+const ASPHALT = "#33353a";
+const ROAD_LINE = "#c9be9a";
+const PAVE = "#9c968a";
+const PHONE = "905324618398";
+
+const GROUND_SIZE = 320;
+
 /** Auto-fit target height (world units) when no modelScale is provided. */
 const TARGET_HEIGHT = 14;
-
-/**
- * Fraction of the model height covered by the unit grid. The bounding box
- * includes rooftop mechanical structures/parapets, so the residential grid is
- * kept to the lower portion and the roof clutter stays clear.
- */
+/** Unit grid covers the lower portion of the model (roof/plant clutter clear). */
 const BODY_FRACTION = 0.72;
+
+/** Initial camera (south-west, looking north-east at the entrance façade). */
+const CAM_XZ: [number, number] = [-30, 34];
+const TGT_XZ: [number, number] = [0, 0];
 
 /** Availability status — göstermelik (demo). Renkler gerçek doluluk değil. */
 type UnitStatus = "available" | "reserved" | "sold";
@@ -65,51 +55,31 @@ function unitStatus(floor: number, unit: number, floorCount: number): UnitStatus
   return "available";
 }
 
-function toWorld(px: number, py: number, depth: number): [number, number] {
-  return [(px - 0.5) * GROUND_W, (py - 0.5) * depth];
-}
-
-function centroid(depth: number): [number, number] {
-  const n = ARSA_BOUNDARY_POINTS.length;
-  let sx = 0,
-    sy = 0;
-  for (const [px, py] of ARSA_BOUNDARY_POINTS) {
-    sx += px;
-    sy += py;
-  }
-  return toWorld(sx / n, sy / n, depth);
-}
-
 function waLink(projectTitle: string, floor: number, unit: number) {
   const msg = `Merhaba, ${projectTitle} - Kat ${floor}, Daire ${unit} hakkında bilgi almak istiyorum.`;
   return `https://wa.me/${PHONE}?text=${encodeURIComponent(msg)}`;
 }
 
-function Ground({ texture, depth }: { texture: THREE.Texture | null; depth: number }) {
-  return (
-    <mesh rotation={[-Math.PI / 2, 0, 0]}>
-      <planeGeometry args={[GROUND_W, depth]} />
-      <meshStandardMaterial map={texture ?? undefined} color={texture ? "#ffffff" : DIRT_COLOR} />
-    </mesh>
-  );
+/* ------------------------------------------------------------------ helpers */
+
+/** Small deterministic PRNG so the generated city is stable across renders. */
+function mulberry32(seed: number) {
+  return function () {
+    seed |= 0;
+    seed = (seed + 0x6d2b79f5) | 0;
+    let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
 }
 
-function Boundary({ depth }: { depth: number }) {
-  const points = useMemo(() => {
-    const pts = ARSA_BOUNDARY_POINTS.map(([px, py]) => {
-      const [x, z] = toWorld(px, py, depth);
-      return new THREE.Vector3(x, 0.05, z);
-    });
-    pts.push(pts[0].clone());
-    return pts;
-  }, [depth]);
-  const top = useMemo(() => points.map((p) => new THREE.Vector3(p.x, 0.07, p.z)), [points]);
-  return (
-    <group>
-      <Line points={points} color={GOLD} lineWidth={8} transparent opacity={0.4} depthWrite={false} />
-      <Line points={top} color={PETROL} lineWidth={2.5} depthWrite={false} />
-    </group>
-  );
+function shade(hex: string, amt: number) {
+  const n = parseInt(hex.slice(1), 16);
+  const clamp = (v: number) => Math.max(0, Math.min(255, Math.round(v)));
+  const r = clamp(((n >> 16) & 255) + amt * 255);
+  const g = clamp(((n >> 8) & 255) + amt * 255);
+  const b = clamp((n & 255) + amt * 255);
+  return `rgb(${r},${g},${b})`;
 }
 
 /** Procedural façade texture: base colour + a subtle recessed-window grid. */
@@ -138,105 +108,283 @@ function facadeTexture(base: string, windowTint: string, rows: number) {
   return tex;
 }
 
-/**
- * A simple, neutral apartment-block volume (BoxGeometry) used to suggest the
- * surrounding city fabric around the real model. Representational only — not a
- * detailed model. Sits on the ground (base at y=0), raycast disabled.
- */
-function NeighborBuilding({
-  groundXZ,
-  size,
-  color,
-  windowTint,
-  floors,
-}: {
-  groundXZ: [number, number];
-  size: [number, number, number];
-  color: string;
-  windowTint: string;
-  floors: number;
-}) {
-  const materials = useMemo(() => {
-    const tex = facadeTexture(color, windowTint, floors);
-    const side = new THREE.MeshStandardMaterial({
-      map: tex ?? undefined,
-      color: tex ? "#ffffff" : color,
-      roughness: 0.92,
-      metalness: 0,
-    });
-    const plain = new THREE.MeshStandardMaterial({ color, roughness: 0.95, metalness: 0 });
-    // box face order: +x, −x, +y(top), −y(bottom), +z, −z
-    return [side, side.clone(), plain, plain, side.clone(), side.clone()];
-  }, [color, windowTint, floors]);
+/** 6-material array for a box: textured sides, plain (slightly darker) roof. */
+function sixMaterials(base: string, windowTint: string, rows: number) {
+  const tex = facadeTexture(base, windowTint, rows);
+  const side = new THREE.MeshStandardMaterial({
+    map: tex ?? undefined,
+    color: tex ? "#ffffff" : base,
+    roughness: 0.92,
+    metalness: 0,
+  });
+  const roof = new THREE.MeshStandardMaterial({
+    color: shade(base, -0.12),
+    roughness: 0.95,
+    metalness: 0,
+  });
+  // face order: +x, −x, +y(top), −y(bottom), +z, −z  (same instances reused)
+  const mats = [side, side, roof, roof, side, side];
+  const dispose = () => {
+    tex?.dispose();
+    side.dispose();
+    roof.dispose();
+  };
+  return { mats, dispose };
+}
 
-  useEffect(
-    () => () => {
-      materials.forEach((m) => {
-        const map = (m as THREE.MeshStandardMaterial).map;
-        if (map) map.dispose();
-        m.dispose();
-      });
-    },
-    [materials]
-  );
+/* --------------------------------------------------------- city view corridor */
 
+const _fdx = TGT_XZ[0] - CAM_XZ[0];
+const _fdz = TGT_XZ[1] - CAM_XZ[1];
+const _flen = Math.hypot(_fdx, _fdz) || 1;
+const FWD: [number, number] = [_fdx / _flen, _fdz / _flen];
+const CAM_TGT_LEN = _flen;
+
+/** True if (x,z) sits inside the camera→building corridor (would occlude). */
+function inViewCorridor(x: number, z: number, half: number) {
+  const vx = x - CAM_XZ[0];
+  const vz = z - CAM_XZ[1];
+  const along = vx * FWD[0] + vz * FWD[1];
+  if (along < 0 || along > CAM_TGT_LEN + 8) return false;
+  const perp = Math.abs(vx * FWD[1] - vz * FWD[0]);
+  return perp < half;
+}
+
+/* --------------------------------------------------------------- environment */
+
+function CityGround() {
   return (
-    <mesh
-      position={[groundXZ[0], size[1] / 2, groundXZ[1]]}
-      material={materials}
-      raycast={() => null}
-    >
-      <boxGeometry args={size} />
+    <mesh rotation={[-Math.PI / 2, 0, 0]} raycast={() => null}>
+      <planeGeometry args={[GROUND_SIZE, GROUND_SIZE]} />
+      <meshStandardMaterial color={TERRAIN} roughness={1} />
     </mesh>
   );
 }
 
-/**
- * Hard-coded neighbour fabric for Sadebal Citylife only. WEST (−X, entrance)
- * and SOUTH (+Z) stay empty; one block sits NORTH (−Z), one EAST (+X), both
- * outside the plot with a road gap, clamped to stay on the satellite ground.
- */
-function CityNeighbors({ center, depth }: { center: [number, number]; depth: number }) {
-  const halfW = GROUND_W / 2;
-  const halfD = depth / 2;
-  const margin = 1.5;
-  const clampX = (x: number, ext: number) =>
-    Math.max(-halfW + ext + margin, Math.min(halfW - ext - margin, x));
-  const clampZ = (z: number, ext: number) =>
-    Math.max(-halfD + ext + margin, Math.min(halfD - ext - margin, z));
+type RoadDef = { x: number; z: number; w: number; l: number; dir: "ns" | "ew" };
+const ROADS: RoadDef[] = [
+  { x: -14, z: 0, w: 8, l: 170, dir: "ns" }, // front (west) avenue
+  { x: 16, z: 0, w: 7, l: 170, dir: "ns" }, // east avenue
+  { x: 0, z: 16, w: 170, l: 7, dir: "ew" }, // south street
+  { x: 0, z: -16, w: 170, l: 7, dir: "ew" }, // north street
+];
 
-  // NORTH (−Z): pink/salmon, ~8 floors, long along the E–W street.
-  const nSize: [number, number, number] = [11, 10.4, 6];
-  const nPos: [number, number] = [
-    clampX(center[0] + 2.5, nSize[0] / 2),
-    clampZ(center[1] - 15, nSize[2] / 2),
-  ];
-  // EAST (+X): light cream, taller ~11 floors, long along the N–S street.
-  const eSize: [number, number, number] = [6, 15.4, 11];
-  const ePos: [number, number] = [
-    clampX(center[0] + 16, eSize[0] / 2),
-    clampZ(center[1] + 1.5, eSize[2] / 2),
-  ];
-
+function Roads() {
   return (
     <group>
-      <NeighborBuilding
-        groundXZ={nPos}
-        size={nSize}
-        color="#D4A5A5"
-        windowTint="#B98686"
-        floors={8}
-      />
-      <NeighborBuilding
-        groundXZ={ePos}
-        size={eSize}
-        color="#E8E4DC"
-        windowTint="#C7C0B1"
-        floors={11}
-      />
+      {/* Plot pad under the main building */}
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[1, 0.015, 0]} raycast={() => null}>
+        <planeGeometry args={[22, 25]} />
+        <meshStandardMaterial color={PAVE} roughness={1} />
+      </mesh>
+      {ROADS.map((r, i) => (
+        <group key={i}>
+          <mesh rotation={[-Math.PI / 2, 0, 0]} position={[r.x, 0.02, r.z]} raycast={() => null}>
+            <planeGeometry args={[r.w, r.l]} />
+            <meshStandardMaterial color={ASPHALT} roughness={1} />
+          </mesh>
+          <mesh rotation={[-Math.PI / 2, 0, 0]} position={[r.x, 0.03, r.z]} raycast={() => null}>
+            <planeGeometry args={r.dir === "ns" ? [0.35, r.l] : [r.w, 0.35]} />
+            <meshStandardMaterial color={ROAD_LINE} roughness={1} />
+          </mesh>
+        </group>
+      ))}
     </group>
   );
 }
+
+const CITY_PALETTES: [string, string][] = [
+  ["#C9C2B4", "#A69E8C"],
+  ["#E4DECF", "#C3BAA4"],
+  ["#B9B0A0", "#968C79"],
+  ["#CBD0CE", "#A7AEAC"],
+  ["#D8C7B0", "#B39C7E"],
+  ["#C6B7B0", "#A08E85"],
+];
+
+type Bld = { x: number; z: number; w: number; d: number; h: number; pal: number };
+
+function inPlot(x: number, z: number) {
+  return Math.abs(x) < 15 && Math.abs(z) < 17;
+}
+function onRoad(x: number, z: number, half: number) {
+  const near = (v: number, c: number, hw: number) => Math.abs(v - c) < hw + half;
+  return near(x, -14, 4) || near(x, 16, 3.5) || near(z, 16, 3.5) || near(z, -16, 3.5);
+}
+function nearHero(x: number, z: number) {
+  const pink = Math.abs(x) < 10 && Math.abs(z + 26) < 7; // north block
+  const cream = Math.abs(x - 26) < 7 && Math.abs(z) < 10; // east block
+  return pink || cream;
+}
+
+function generateCity(): Bld[] {
+  const rnd = mulberry32(20260701);
+  const out: Bld[] = [];
+  const blocks = [
+    { x0: 22, x1: 54, z0: -46, z1: 44, sp: 12 }, // EAST
+    { x0: -34, x1: 20, z0: -50, z1: -24, sp: 12 }, // NORTH
+    { x0: -54, x1: -22, z0: -46, z1: -6, sp: 12 }, // NORTHWEST
+    { x0: 24, x1: 50, z0: 22, z1: 48, sp: 12 }, // SOUTHEAST
+    { x0: -60, x1: -32, z0: -6, z1: 22, sp: 13 }, // WEST-FAR (across the front)
+  ];
+  for (const b of blocks) {
+    for (let x = b.x0; x <= b.x1; x += b.sp) {
+      for (let z = b.z0; z <= b.z1; z += b.sp) {
+        const jx = x + (rnd() - 0.5) * 4;
+        const jz = z + (rnd() - 0.5) * 4;
+        const w = 5 + rnd() * 5;
+        const d = 5 + rnd() * 5;
+        const floors = 3 + Math.floor(rnd() * 12);
+        const h = floors * 1.5 + rnd() * 2;
+        const half = Math.max(w, d) / 2;
+        if (inPlot(jx, jz) || onRoad(jx, jz, half) || nearHero(jx, jz)) continue;
+        if (inViewCorridor(jx, jz, half + 7)) continue;
+        out.push({ x: jx, z: jz, w, d, h, pal: Math.floor(rnd() * CITY_PALETTES.length) });
+      }
+    }
+  }
+  return out;
+}
+
+function CityBuildings() {
+  const box = useMemo(() => new THREE.BoxGeometry(1, 1, 1), []);
+  const palettes = useMemo(() => CITY_PALETTES.map(([b, w]) => sixMaterials(b, w, 10)), []);
+  const blds = useMemo(() => generateCity(), []);
+
+  useEffect(
+    () => () => {
+      box.dispose();
+      palettes.forEach((p) => p.dispose());
+    },
+    [box, palettes]
+  );
+
+  return (
+    <group>
+      {blds.map((b, i) => (
+        <mesh
+          key={i}
+          geometry={box}
+          material={palettes[b.pal].mats}
+          position={[b.x, b.h / 2, b.z]}
+          scale={[b.w, b.h, b.d]}
+          raycast={() => null}
+        />
+      ))}
+    </group>
+  );
+}
+
+/** The two prominent neighbours the client asked for (fixed, non-overlapping). */
+function HeroNeighbours() {
+  const box = useMemo(() => new THREE.BoxGeometry(1, 1, 1), []);
+  const pink = useMemo(() => sixMaterials("#D4A5A5", "#B98686", 8), []);
+  const cream = useMemo(() => sixMaterials("#E8E4DC", "#C7C0B1", 11), []);
+  useEffect(
+    () => () => {
+      box.dispose();
+      pink.dispose();
+      cream.dispose();
+    },
+    [box, pink, cream]
+  );
+  return (
+    <group>
+      {/* NORTH — pink/salmon, ~8 floors, across the north street */}
+      <mesh geometry={box} material={pink.mats} position={[0, 5.5, -26]} scale={[14, 11, 8]} raycast={() => null} />
+      {/* EAST — light cream, taller ~11 floors, across the east avenue */}
+      <mesh geometry={box} material={cream.mats} position={[26, 8, 1]} scale={[8, 16, 12]} raycast={() => null} />
+    </group>
+  );
+}
+
+type Mtn = { x: number; z: number; h: number; r: number; seg: number; c: string };
+const MTN_COLORS = ["#4C5A3C", "#5B6B49", "#6B6350", "#556646", "#5f5847"];
+
+function generateMountains(): Mtn[] {
+  const rnd = mulberry32(4242);
+  const out: Mtn[] = [];
+  for (let i = 0; i < 18; i++) {
+    const ang = (i / 18) * Math.PI * 2 + (rnd() - 0.5) * 0.35;
+    const rad = 66 + rnd() * 40;
+    out.push({
+      x: Math.cos(ang) * rad,
+      z: Math.sin(ang) * rad,
+      h: 22 + rnd() * 34,
+      r: 16 + rnd() * 22,
+      seg: 5 + Math.floor(rnd() * 3),
+      c: MTN_COLORS[Math.floor(rnd() * MTN_COLORS.length)],
+    });
+  }
+  return out;
+}
+
+function Mountains() {
+  const mts = useMemo(() => generateMountains(), []);
+  return (
+    <group>
+      {mts.map((m, i) => (
+        <mesh key={i} position={[m.x, m.h / 2 - 2.5, m.z]} raycast={() => null}>
+          <coneGeometry args={[m.r, m.h, m.seg]} />
+          <meshStandardMaterial color={m.c} roughness={1} flatShading />
+        </mesh>
+      ))}
+    </group>
+  );
+}
+
+function Trees() {
+  const foliage = useMemo(() => new THREE.ConeGeometry(1, 2.4, 6), []);
+  const trunk = useMemo(() => new THREE.CylinderGeometry(0.16, 0.22, 1, 5), []);
+  const fMat = useMemo(() => new THREE.MeshStandardMaterial({ color: "#4e6b3e", roughness: 1, flatShading: true }), []);
+  const tMat = useMemo(() => new THREE.MeshStandardMaterial({ color: "#6b4f35", roughness: 1 }), []);
+  const spots = useMemo(() => {
+    const rnd = mulberry32(909);
+    const list: [number, number, number][] = [];
+    // tree line in front of the entrance (short, non-blocking)
+    for (let z = -11; z <= 12; z += 3.2) list.push([-9.2, z, 0.9 + rnd() * 0.5]);
+    // a few scattered near the north/east blocks
+    for (let i = 0; i < 10; i++) {
+      const x = -8 + rnd() * 40;
+      const z = -34 + rnd() * 14;
+      if (!inPlot(x, z) && !onRoad(x, z, 1)) list.push([x, z, 0.9 + rnd() * 0.6]);
+    }
+    return list;
+  }, []);
+  useEffect(
+    () => () => {
+      foliage.dispose();
+      trunk.dispose();
+      fMat.dispose();
+      tMat.dispose();
+    },
+    [foliage, trunk, fMat, tMat]
+  );
+  return (
+    <group>
+      {spots.map(([x, z, s], i) => (
+        <group key={i} position={[x, 0, z]} scale={s} raycast={() => null}>
+          <mesh geometry={trunk} material={tMat} position={[0, 0.5, 0]} raycast={() => null} />
+          <mesh geometry={foliage} material={fMat} position={[0, 2.1, 0]} raycast={() => null} />
+        </group>
+      ))}
+    </group>
+  );
+}
+
+function CityEnvironment() {
+  return (
+    <group>
+      <Roads />
+      <CityBuildings />
+      <HeroNeighbours />
+      <Trees />
+      <Mountains />
+    </group>
+  );
+}
+
+/* ----------------------------------------------------------------- the model */
 
 /**
  * Loads the project's .glb model and overlays a per-unit colour grid that hugs
@@ -256,8 +404,6 @@ function BuildingModel({
   const { scene } = useGLTF(tour3D.modelUrl!, true);
   const { floorCount, unitsPerFloor } = tour3D;
 
-  // Clone (shares geometry/materials), center horizontally, sit base on y=0,
-  // and disable raycasting on the model so only the unit markers catch events.
   const model = useMemo(() => {
     const object = scene.clone(true);
     const box = new THREE.Box3().setFromObject(object);
@@ -422,80 +568,43 @@ function ModelLoadingOverlay() {
 
 export default function BuildingTour3D({ project }: { project: Project }) {
   const tour3D = project.tour3D!;
-  const [scene, setScene] = useState<{ texture: THREE.Texture | null; depth: number } | null>(null);
+  const isCity = project.slug === CITYLIFE_SLUG;
 
-  // Start fetching the model early (in parallel with the satellite).
+  // Start fetching the model early.
   useEffect(() => {
     if (tour3D.modelUrl) useGLTF.preload(tour3D.modelUrl, true);
   }, [tour3D.modelUrl]);
 
-  useEffect(() => {
-    let active = true;
-    const finish = (texture: THREE.Texture | null, aspect: number) => {
-      if (active) setScene({ texture, depth: GROUND_W / aspect });
-    };
-    if (!tour3D.satelliteImageUrl) {
-      finish(null, 1);
-      return;
-    }
-    new THREE.TextureLoader().load(
-      tour3D.satelliteImageUrl,
-      (tex) => {
-        tex.colorSpace = THREE.SRGBColorSpace;
-        const img = tex.image as { width?: number; height?: number } | undefined;
-        const aspect = img?.width && img?.height ? img.width / img.height : 1;
-        finish(tex, aspect);
-      },
-      undefined,
-      () => finish(null, 1)
-    );
-    return () => {
-      active = false;
-    };
-  }, [tour3D.satelliteImageUrl]);
-
-  if (!scene) {
-    return (
-      <div className="flex h-full w-full items-center justify-center bg-petrol-900">
-        <div className="h-8 w-8 animate-spin rounded-full border-2 border-[#F7F4ED]/20 border-t-gold-500" />
-      </div>
-    );
-  }
-
-  const center = centroid(scene.depth);
   return (
     <>
       <Canvas
-        // Start at the SOUTH-WEST corner looking NORTH-EAST: the WEST (entrance)
-        // and SOUTH faces stay clear, neighbours peek from behind on N/E.
-        camera={{ position: [center[0] - 22, TARGET_HEIGHT + 15, center[1] + 26], fov: 45 }}
+        camera={{ position: [CAM_XZ[0], 22, CAM_XZ[1]], fov: 45 }}
         dpr={[1, 2]}
         gl={{ antialias: true }}
       >
-        <color attach="background" args={["#0F3D3E"]} />
-        <ambientLight intensity={0.9} />
-        <directionalLight position={[20, 30, 15]} intensity={1.7} />
-        <directionalLight position={[-15, 12, -10]} intensity={0.4} />
+        <color attach="background" args={[PETROL]} />
+        <fog attach="fog" args={[PETROL, 80, 215]} />
+        <hemisphereLight args={["#dfe7e2", "#3a4a3a", 0.6]} />
+        <ambientLight intensity={0.5} />
+        <directionalLight position={[40, 50, 20]} intensity={1.5} />
+        <directionalLight position={[-25, 18, -15]} intensity={0.35} />
 
-        <Ground texture={scene.texture} depth={scene.depth} />
-        <Boundary depth={scene.depth} />
-        {project.slug === CITYLIFE_SLUG && (
-          <CityNeighbors center={center} depth={scene.depth} />
-        )}
+        <CityGround />
+        {isCity && <CityEnvironment />}
 
         <Suspense fallback={null}>
           {tour3D.modelUrl && (
-            <BuildingModel tour3D={tour3D} projectTitle={project.title} center={center} />
+            <BuildingModel tour3D={tour3D} projectTitle={project.title} center={[0, 0]} />
           )}
         </Suspense>
 
         <OrbitControls
           makeDefault
-          target={[center[0], TARGET_HEIGHT / 2, center[1]]}
+          target={[0, TARGET_HEIGHT / 2, 0]}
           enableDamping
           dampingFactor={0.08}
-          minDistance={8}
-          maxDistance={70}
+          minDistance={10}
+          maxDistance={140}
           maxPolarAngle={Math.PI / 2.15}
         />
       </Canvas>

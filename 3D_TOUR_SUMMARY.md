@@ -9,7 +9,10 @@ tamamen **veri-driven**: her proje kendi modeline + ayarlarına sahip olabilir.
 - Model `useGLTF(modelUrl, true)` ile yüklenir (DRACO + meshopt desteği açık).
 - Model otomatik olarak **yatayda ortalanır**, **tabanı zemine** (y=0) oturur ve
   `modelScale` verilmemişse **hedef yüksekliğe (~14 birim) otomatik ölçeklenir**.
-- Arsa sınırı poligonunun **centroid**'ine yerleşir; ince ayar için `modelPosition`.
+- Model **dünya merkezine (0,0,0)** oturur; ince ayar için `modelPosition`.
+- **Uydu zemini kaldırıldı.** Yerine stilize bir **şehir ortamı** kurulur
+  (terrain + yol ızgarası + prosedürel bina blokları + dağ silsilesi + ağaçlar +
+  sis). Bkz. aşağıdaki "Şehir ortamı" bölümü.
 - **Kat tıklama:** gerçek model tek mesh olduğu için, modelin üstüne kat başına
   **görünmez "hit box"** (raycast katmanı) konur. Modelin geometrisine dokunulmaz;
   model mesh'lerinin raycast'i kapatılır, sadece hit box'lar tıklama/hover alır.
@@ -25,10 +28,10 @@ tamamen **veri-driven**: her proje kendi modeline + ayarlarına sahip olabilir.
   "modelUrl": "/models/sadebal-citylife.glb",
   "floorCount": 10,
   "unitsPerFloor": 4,
-  "satelliteImageUrl": "/images/satellite/sadebal-citylife-satellite.jpg",
+  "satelliteImageUrl": "…",     // ARTIK KULLANILMIYOR (uydu zemini kaldırıldı)
   "modelScale": 1.0,            // opsiyonel — yoksa auto-fit
   "modelRotationY": 0,          // opsiyonel — radyan
-  "modelPosition": { "x": 0, "y": 0, "z": 0 } // opsiyonel — centroid'e göre kaydırma
+  "modelPosition": { "x": 0, "y": 0, "z": 0 } // opsiyonel — merkeze göre kaydırma
 }
 ```
 `enabled:false` veya `modelUrl` yoksa, `/portfoy/<slug>/3d-tur` **proje detayına
@@ -38,8 +41,8 @@ yönlendirir** (redirect).
 1. Modeli `.glb` olarak hazırla, **`public/models/<slug>.glb`** olarak ekle
    (ör. `public/models/loca-life.glb`).
 2. `data/projects.json` içinde o projenin `tour3D` objesini doldur:
-   `enabled:true`, `modelUrl:"/models/<slug>.glb"`, `floorCount`, `unitsPerFloor`,
-   `satelliteImageUrl` (varsa).
+   `enabled:true`, `modelUrl:"/models/<slug>.glb"`, `floorCount`, `unitsPerFloor`.
+   (`satelliteImageUrl` artık kullanılmıyor.)
 3. Proje detay sayfasında "3D Bina Turunu Başlat" butonu otomatik görünür
    (sadece `tour3D.enabled` olanlarda).
 4. Sahnede modelin oturuşunu kontrol et; gerekiyorsa ince ayar:
@@ -47,8 +50,9 @@ yönlendirir** (redirect).
    - **Ön cephe yanlış yöne bakıyor** → `modelRotationY` (radyan; 90° = `1.5708`,
      180° = `3.1416`).
    - **Sınırın dışına taşıyor / kaymış** → `modelPosition: { x, y, z }` ile kaydır.
-5. Uydu üstündeki arsa poligonunu projeye göre ayarlamak istersen:
-   `BuildingTour3D.tsx > ARSA_BOUNDARY_POINTS` (oransal 0–1 noktalar).
+5. Şehir ortamı (yollar/komşular/dağlar) **yalnız Citylife'a** özeldir; başka
+   projede sade terrain görünür. Genişletmek istersen `BuildingTour3D.tsx >
+   CityEnvironment` ve alt bileşenlerine bak.
 
 ## ⚠️ Performans — ÖNEMLİ
 - Mevcut `sadebal-citylife.glb` **~54 MB** (texture ağırlıklı). Bu, her ziyaretçi
@@ -82,24 +86,37 @@ yönlendirir** (redirect).
 - **`BODY_FRACTION` (0.72):** model bounding box'ı çatı/teknik kütleyi de
   kapsadığından, daire grid'i yüksekliğin yalnız alt %72'sine (konut cephesi)
   yerleşir; çatıdaki inşaat/teknik yapılar (modelin gerçek geometrisi) açıkta kalır.
-- **Komşu binalar (yalnız Citylife, `CityNeighbors`):** basit `BoxGeometry`
-  hacimler, **sahnede hardcoded** (projects.json'a veri eklenmedi). Yön ekseni:
-  `−X=BATI (giriş cephesi), +X=DOĞU, −Z=KUZEY, +Z=GÜNEY`.
-  - **BATI ve GÜNEY tamamen boş** (giriş cephesi engelsiz).
-  - **KUZEY:** pembe/somon kütle (~8 kat, `#D4A5A5`).
-  - **DOĞU:** açık krem kütle, daha yüksek (~11 kat, `#E8E4DC`).
-  - Her ikisi arsa dışında, yol payı bırakacak şekilde; uydu zemininin dışına
-    taşmaması için zemine clamp'lenir. Cephelerde prosedürel pencere dokusu.
-- **Kamera başlangıcı:** güneybatıdan kuzeydoğuya bakan diagonal
-  (`[center.x − 22, ~, center.z + 26]`) → batı (giriş) + güney cephe net,
-  K/D komşular arka planda. Komşular sadece Citylife'a özel; ileride proje bazlı
-  `neighborBuildings` verisi gerekirse genelleştirilebilir.
+## Şehir ortamı (yalnız Citylife, `CityEnvironment`)
+
+Yön ekseni: `−X=BATI (giriş cephesi), +X=DOĞU, −Z=KUZEY, +Z=GÜNEY`.
+Ana model dünya merkezinde; her şey hardcoded (projects.json'a veri eklenmedi).
+
+- **Terrain (`CityGround`):** büyük tek düzlem (320×320), toprak/yeşil ton. Uydu yok.
+- **Yollar (`Roads`):** 2 K–G + 2 D–B asfalt şerit → ızgara + kesişimler, orta
+  çizgili; ana binanın altında beton **plot pad**. Ön (batı) avenüsü giriş cephesinin
+  önünden geçer.
+- **Şehir binaları (`CityBuildings`):** seeded (`mulberry32`) prosedürel bloklar,
+  ~50-60 `BoxGeometry` (paylaşılan geometri + 6 palet, pencere dokulu). Bloklar:
+  doğu, kuzey, kuzeybatı, güneydoğu, batı-uzak. **Plot, yollar ve iki hero komşu
+  üzerine denk gelenler elenir.**
+- **Görüş koridoru (`inViewCorridor`):** kamera→bina hattına düşen binalar elenir →
+  **ön cephe (batı) her zaman açık.** Uzaktaki batı binaları koridorun dışında
+  kaldığından görünür ama engellemez (client: "ön cephe kapalı kalmayacak, bina
+  koyacaksan uzağına").
+- **Hero komşular (`HeroNeighbours`):** KUZEY pembe/somon (~8 kat, `#D4A5A5`),
+  DOĞU krem daha yüksek (~11 kat, `#E8E4DC`). Yolların karşısında, **ana binaya
+  girmeyecek** şekilde sabit konumlanır (eski overlap düzeltildi).
+- **Dağlar (`Mountains`):** perimetrede ~18 low-poly koni (flatShading), yeşil/kahve;
+  **sis** (`<fog>` petrol, 80→215) ile ufkta erir.
+- **Ağaçlar (`Trees`):** giriş önünde kısa ağaç sırası + serpiştirilmiş birkaç ağaç.
+- **Kamera:** güneybatıdan (`[-30, 22, 34]`) kuzeydoğuya, giriş cephesine bakar;
+  şehir arkada, dağlar ufukta.
 
 ## Verilen kararlar
 - **Auto-fit:** `modelScale` yoksa model hedef yüksekliğe (~14 birim) ölçeklenir —
   model birimini bilmeden "çalışır" gelsin diye. Data'da `modelScale` verilince o kullanılır.
-- **Hit box raycast:** model mesh'lerinin `raycast`'i no-op yapıldı; sadece kat
-  hit box'ları olay alır → tıklama hep doğru kata gider.
+- **Raycast:** model mesh'lerinin + çevre (bina/ağaç/dağ) `raycast`'i no-op
+  yapıldı; sadece **daire hücreleri** olay alır → tıklama hep doğru daireye gider.
 - **DRACO açık** (`useGLTF(url, true)`): şu anki model draco değil (zararsız), ama
   sıkıştırılmış model gelince hazır. (Decoder gstatic CDN'den yüklenir.)
 - UI elementlerine (başlık, geri butonu, lejant, arka plan) dokunulmadı; yalnızca
