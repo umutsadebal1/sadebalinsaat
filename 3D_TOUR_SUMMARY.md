@@ -88,6 +88,13 @@ yönlendirir** (redirect).
   opacity), cepheye hafif taşarak (`model.d * 1.04`) oturur.
 - **`BODY_FRACTION` (0.72):** grid yüksekliğin alt %72'sine (konut cephesi) yerleşir;
   çatıdaki inşaat/teknik kütle açıkta kalır.
+- **`commercialFloors` (Citylife: 1):** tabanda dükkan/ticari kat(lar). Konut grid'i
+  bu kadar slot yukarıdan başlar (`slots = floorCount + commercialFloors`); en alt
+  kat(lar) boş bırakılır (modelin ham ticari zemini görünür). 2 yapılırsa zemin+1.kat
+  ticari olur.
+- **`unitGalleries` (tip→görsel[] ):** karttaki tipe özel galeri (2+1 / 3+1 ayrı).
+  Doluysa kartta oda dağılımının altında küçük görsel şeridi (`tour.gallery`) çıkar;
+  boşsa gizli. Görseller `public/images/...` altına konup URL'leri buraya eklenir.
 - **Durum sistemi:** `tour3D.unitStatuses` → `"<kat>-<daireId>"` (ör. `"5-B"`) →
   `"Müsait"|"Rezerve"|"Satıldı"` (varsayılan Müsait, 10×6=60 kayıt). Renk buradan gelir
   (🟢/🟡/🔴). `unitAvailability()` yardımcıyla okunur.

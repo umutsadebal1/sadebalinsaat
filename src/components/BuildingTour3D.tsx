@@ -452,7 +452,12 @@ function BuildingModel({
   }
   useEffect(() => () => setCursor(false), []);
 
-  const floorH = (model.height * BODY_FRACTION) / Math.max(1, floorCount);
+  // Reserve the base for commercial/shop floors so the residential grid starts
+  // above them; each physical floor shares the usable (BODY_FRACTION) height.
+  const commercialFloors = tour3D.commercialFloors ?? 0;
+  const slots = floorCount + commercialFloors;
+  const floorH = (model.height * BODY_FRACTION) / Math.max(1, slots);
+  const floorY = (f: number) => (commercialFloors + f) * floorH + floorH / 2;
   const rotY = tour3D.modelRotationY ?? 0;
   const pos = tour3D.modelPosition ?? { x: 0, y: 0, z: 0 };
   const floors = Array.from({ length: floorCount }, (_, i) => i);
@@ -471,7 +476,7 @@ function BuildingModel({
         {/* All units always visible — coloured by real availability data */}
         {floors.map((f) =>
           Array.from({ length: N }, (_, u) => {
-            const y = f * floorH + floorH / 2;
+            const y = floorY(f);
             const unit = units[u];
             const status = unit ? unitAvailability(tour3D, f + 1, unit.id) : "Müsait";
             const sc = STATUS_TR[status].color;
@@ -516,7 +521,7 @@ function BuildingModel({
           (() => {
             const unit = units[sel.u];
             const floor1 = sel.f + 1;
-            const y = sel.f * floorH + floorH / 2;
+            const y = floorY(sel.f);
             const status = unitAvailability(tour3D, floor1, unit.id);
             const info = STATUS_TR[status];
             return (
@@ -558,6 +563,36 @@ function BuildingModel({
                       </li>
                     ))}
                   </ul>
+
+                  {(() => {
+                    const imgs = tour3D.unitGalleries?.[unit.type];
+                    if (!imgs?.length) return null;
+                    return (
+                      <div className="mt-3">
+                        <p className="mb-1 font-mono-label text-[10px] uppercase tracking-[0.1em] text-ink-soft">
+                          {t("tour.gallery")}
+                        </p>
+                        <div className="flex gap-1.5 overflow-x-auto pb-1">
+                          {imgs.map((src, i) => (
+                            <a
+                              key={i}
+                              href={src}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="block shrink-0 overflow-hidden rounded border border-line"
+                            >
+                              {/* eslint-disable-next-line @next/next/no-img-element */}
+                              <img
+                                src={src}
+                                alt=""
+                                className="h-14 w-20 object-cover transition-transform hover:scale-105"
+                              />
+                            </a>
+                          ))}
+                        </div>
+                      </div>
+                    );
+                  })()}
 
                   <p className="mt-3 flex items-center gap-1.5 text-xs text-ink-soft">
                     <span

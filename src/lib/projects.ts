@@ -43,6 +43,10 @@ export type Tour3DConfig = {
   floorUnits?: FloorUnit[];
   /** Per-unit availability, keyed `"<floor>-<unitId>"` (e.g. "5-B"). Default: Müsait. */
   unitStatuses?: Record<string, UnitAvailability>;
+  /** Commercial/shop floors at the base — the residential grid starts above them. */
+  commercialFloors?: number;
+  /** Interior gallery images per unit type (e.g. "2+1", "3+1"). */
+  unitGalleries?: Record<string, string[]>;
 };
 
 /** Left→right physical order of unit positions, used to place hit boxes. */
