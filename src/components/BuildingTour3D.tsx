@@ -32,7 +32,7 @@ const GROUND_SIZE = 320;
 /** Auto-fit target height (world units) when no modelScale is provided. */
 const TARGET_HEIGHT = 14;
 /** Unit grid covers the lower portion of the model (roof/plant clutter clear). */
-const BODY_FRACTION = 0.72;
+const BODY_FRACTION = 0.85;
 
 /** Initial camera (south-west, looking north-east at the entrance façade). */
 const CAM_XZ: [number, number] = [-30, 34];
