@@ -569,23 +569,23 @@ function BuildingModel({
                     if (!imgs?.length) return null;
                     return (
                       <div className="mt-3">
-                        <p className="mb-1 font-mono-label text-[10px] uppercase tracking-[0.1em] text-ink-soft">
+                        <p className="mb-1.5 font-mono-label text-[10px] uppercase tracking-[0.1em] text-ink-soft">
                           {t("tour.gallery")}
                         </p>
-                        <div className="flex gap-1.5 overflow-x-auto pb-1">
+                        <div className="space-y-1.5">
                           {imgs.map((src, i) => (
                             <a
                               key={i}
                               href={src}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="block shrink-0 overflow-hidden rounded border border-line"
+                              className="block overflow-hidden rounded border border-line"
                             >
                               {/* eslint-disable-next-line @next/next/no-img-element */}
                               <img
                                 src={src}
                                 alt=""
-                                className="h-14 w-20 object-cover transition-transform hover:scale-105"
+                                className="max-h-56 w-full bg-bg-elevated object-contain transition-transform hover:scale-[1.02]"
                               />
                             </a>
                           ))}
