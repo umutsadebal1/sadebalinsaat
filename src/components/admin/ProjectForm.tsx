@@ -12,7 +12,7 @@ import type {
   FloorPlan,
   UnitAvailability,
 } from "@/lib/projects";
-import { orderedFloorUnits } from "@/lib/projects";
+import { orderedFloorUnits, isUnitOnFloor } from "@/lib/projects";
 
 const UNIT_STATUSES: UnitAvailability[] = ["Müsait", "Rezerve", "Satıldı"];
 
@@ -484,6 +484,13 @@ export default function ProjectForm({ initial }: Props) {
                       <tr key={floor} className="border-t border-line">
                         <td className="p-1.5 font-medium text-ink">{floor}</td>
                         {ordered.map((u) => {
+                          if (!isUnitOnFloor(t3d, floor - 1, u.id)) {
+                            return (
+                              <td key={u.id} className="p-1 text-center text-ink-soft/40">
+                                —
+                              </td>
+                            );
+                          }
                           const key = `${floor}-${u.id}`;
                           const val = t3d.unitStatuses?.[key] ?? "Müsait";
                           return (

@@ -30,6 +30,7 @@
       "floorCount": 10,
       "unitsPerFloor": 6,
       "commercialFloors": 1,
+      "topFloorUnitIds": ["E", "F"],
       "satelliteImageUrl": "/images/satellite/sadebal-citylife-satellite.jpg",
       "modelRotationY": 0,
       "unitGalleries": { "2+1": [], "3+1": ["/images/cards/citylife-3plus1.jpg"] },

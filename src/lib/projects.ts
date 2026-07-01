@@ -45,6 +45,11 @@ export type Tour3DConfig = {
   unitStatuses?: Record<string, UnitAvailability>;
   /** Commercial/shop floors at the base — the residential grid starts above them. */
   commercialFloors?: number;
+  /**
+   * Penthouse: the unit ids present on the TOP residential floor only (e.g.
+   * ["E","F"] → just the two central units). Other floors keep all `floorUnits`.
+   */
+  topFloorUnitIds?: string[];
   /** Interior gallery images per unit type (e.g. "2+1", "3+1"). */
   unitGalleries?: Record<string, string[]>;
 };
@@ -78,6 +83,21 @@ export function unitAvailability(
   unitId: string
 ): UnitAvailability {
   return tour3D?.unitStatuses?.[`${floor1}-${unitId}`] ?? "Müsait";
+}
+
+/**
+ * Whether a unit id exists on a given residential floor (0-based). The top
+ * floor can be a penthouse (`topFloorUnitIds`, e.g. just the two central units);
+ * all other floors carry the full `floorUnits` set.
+ */
+export function isUnitOnFloor(
+  tour3D: Tour3DConfig,
+  floorIndex0: number,
+  unitId: string
+): boolean {
+  const ids = tour3D.topFloorUnitIds;
+  if (ids?.length && floorIndex0 === tour3D.floorCount - 1) return ids.includes(unitId);
+  return true;
 }
 
 export type Project = {

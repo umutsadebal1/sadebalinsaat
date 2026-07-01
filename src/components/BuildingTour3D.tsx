@@ -5,7 +5,7 @@ import { Canvas } from "@react-three/fiber";
 import { OrbitControls, Html, useGLTF, useProgress } from "@react-three/drei";
 import * as THREE from "three";
 import type { Project, Tour3DConfig, FloorUnit, UnitAvailability } from "@/lib/projects";
-import { orderedFloorUnits, unitAvailability } from "@/lib/projects";
+import { orderedFloorUnits, unitAvailability, isUnitOnFloor } from "@/lib/projects";
 import { useT } from "./LocaleProvider";
 
 /**
@@ -478,6 +478,8 @@ function BuildingModel({
           Array.from({ length: N }, (_, u) => {
             const y = floorY(f);
             const unit = units[u];
+            // Penthouse: on the top floor only the central units exist.
+            if (unit && !isUnitOnFloor(tour3D, f, unit.id)) return null;
             const status = unit ? unitAvailability(tour3D, f + 1, unit.id) : "Müsait";
             const sc = STATUS_TR[status].color;
             const isSel = sel?.f === f && sel?.u === u;
